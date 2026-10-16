@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="night" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1E2A22"/>
+      <stop offset="1" stop-color="#0F1512"/>
+    </linearGradient>
+    <linearGradient id="moss" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#9DBF8E"/>
+      <stop offset="1" stop-color="#5F8A5A"/>
+    </linearGradient>
+    <radialGradient id="moon" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#F3F1EA"/>
+      <stop offset="1" stop-color="#C9CFB8"/>
+    </radialGradient>
+    <clipPath id="squircle"><path d="M512 64c300 0 448 148 448 448s-148 448-448 448S64 812 64 512 212 64 512 64z"/></clipPath>
+  </defs>
+  <path d="M512 64c300 0 448 148 448 448s-148 448-448 448S64 812 64 512 212 64 512 64z" fill="url(#night)"/>
+  <g clip-path="url(#squircle)">
+    <!-- moon, partly hidden behind the hood -->
+    <circle cx="700" cy="300" r="96" fill="url(#moon)"/>
+    <!-- distant spruce line -->
+    <path fill="#17221B" d="M64 760 L140 640 L190 720 L250 580 L320 720 L370 660 L420 760 Z"/>
+    <path fill="#17221B" d="M560 760 L620 680 L670 760 L730 600 L800 740 L860 690 L960 760 Z"/>
+    <!-- the hidden one: hooded figure seen from behind, hollow back -->
+    <path fill="url(#moss)" d="M512 230c-110 0-170 92-170 210v46c0 62 18 124 46 190 20 48 44 96 60 150 8 26 24 38 64 38s56-12 64-38c16-54 40-102 60-150 28-66 46-128 46-190v-46c0-118-60-210-170-210z"/>
+    <!-- hollow: the back is open, you see the night through it -->
+    <path fill="url(#night)" d="M512 318c-56 0-92 48-92 118v30c0 58 20 112 46 156 14 24 30 44 46 56 16-12 32-32 46-56 26-44 46-98 46-156v-30c0-70-36-118-92-118z"/>
+    <!-- a glimpse of the moon through the hollow -->
+    <circle cx="540" cy="420" r="26" fill="url(#moon)" opacity="0.85"/>
+    <!-- the tail, curling out from under the cloak -->
+    <path fill="none" stroke="#C9A77A" stroke-width="22" stroke-linecap="round" d="M600 836c40 20 70 58 60 100-8 34-44 46-72 30"/>
+    <circle cx="598" cy="962" r="18" fill="#C9A77A"/>
+    <!-- ground mist -->
+    <rect x="0" y="880" width="1024" height="144" fill="#0F1512" opacity="0.55"/>
+  </g>
+</svg>

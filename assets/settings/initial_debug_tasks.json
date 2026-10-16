@@ -1,0 +1,47 @@
+// Debug scenarios for this project. Hulder never downloads debug adapters:
+// the "LLDB" adapter below drives the lldb-dap that ships with Xcode and the
+// Xcode Command Line Tools (`xcode-select --install`). Override its location
+// with the `dap.LLDB.binary` setting.
+//
+// For more documentation on how to configure debug tasks,
+// see: https://zed.dev/docs/debugger
+[
+  {
+    // Replace `my-crate` with the binary name from your Cargo.toml.
+    "label": "Debug Rust binary",
+    "adapter": "LLDB",
+    "request": "launch",
+    "program": "$ZED_WORKTREE_ROOT/target/debug/my-crate",
+    "cwd": "$ZED_WORKTREE_ROOT",
+    "build": {
+      "command": "cargo",
+      "args": ["build"],
+      "cwd": "$ZED_WORKTREE_ROOT",
+    },
+  },
+  {
+    "label": "Debug active C++ file",
+    "adapter": "LLDB",
+    "request": "launch",
+    "program": "$ZED_WORKTREE_ROOT/.hulder/bin/$ZED_STEM",
+    "cwd": "$ZED_WORKTREE_ROOT",
+    // Hulder joins command and args into one raw line for your shell, so no
+    // path goes on that line: paths travel in `env` (Zed substitutes $ZED_*
+    // there and hands the values to the process unparsed) and the
+    // single-quoted script expands them only inside double quotes.
+    "build": {
+      "command": "sh",
+      "args": [
+        "-c",
+        "'mkdir -p \"$HULDER_BIN\" && \"$HULDER_CC\" -g -O0 \"$HULDER_FILE\" -o \"$HULDER_BIN/$HULDER_STEM\"'",
+      ],
+      "env": {
+        "HULDER_BIN": "$ZED_WORKTREE_ROOT/.hulder/bin",
+        "HULDER_FILE": "$ZED_FILE",
+        "HULDER_STEM": "$ZED_STEM",
+        "HULDER_CC": "clang++",
+      },
+      "cwd": "$ZED_WORKTREE_ROOT",
+    },
+  },
+]

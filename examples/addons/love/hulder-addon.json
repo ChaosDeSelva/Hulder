@@ -1,0 +1,54 @@
+{
+  "api_version": 1,
+  "id": "love",
+  "name": "LÖVE game tools",
+  "version": "1.0.0",
+  "description": "Create a small game and run it with your installed LÖVE runtime.",
+  "permissions": [
+    "process",
+    "create_project"
+  ],
+  "settings": {
+    "runtime": "/Applications/love.app/Contents/MacOS/love"
+  },
+  "commands": [
+    {
+      "id": "run",
+      "label": "Run game",
+      "executable": "${settings.runtime}",
+      "args": [
+        "."
+      ]
+    },
+    {
+      "id": "version",
+      "label": "Check LÖVE version",
+      "executable": "${settings.runtime}",
+      "args": [
+        "--version"
+      ]
+    }
+  ],
+  "panels": [
+    {
+      "title": "Game development",
+      "text": "Open your game folder, save your files, then run the game. Set runtime to your installed LÖVE executable. Language completion uses the separate Lua extension and LuaLS.",
+      "commands": [
+        "run",
+        "version"
+      ]
+    }
+  ],
+  "templates": [
+    {
+      "id": "starter",
+      "label": "LÖVE starter project",
+      "directory": "love-starter",
+      "files": {
+        "main.lua": "local player = { x = 400, y = 280, speed = 240 }\n\nfunction love.load()\n    love.window.setTitle(\"Hulder LÖVE starter\")\n    love.window.setMode(800, 600)\nend\n\nfunction love.update(dt)\n    if love.keyboard.isDown(\"left\", \"a\") then player.x = player.x - player.speed * dt end\n    if love.keyboard.isDown(\"right\", \"d\") then player.x = player.x + player.speed * dt end\n    if love.keyboard.isDown(\"up\", \"w\") then player.y = player.y - player.speed * dt end\n    if love.keyboard.isDown(\"down\", \"s\") then player.y = player.y + player.speed * dt end\n    player.x = math.max(20, math.min(780, player.x))\n    player.y = math.max(100, math.min(580, player.y))\nend\n\nfunction love.draw()\n    love.graphics.clear(0.07, 0.12, 0.11)\n    love.graphics.setColor(0.90, 0.86, 0.72)\n    love.graphics.print(\"HULDER / LOVE\", 28, 24, 0, 2, 2)\n    love.graphics.print(\"Move with arrow keys or WASD. Escape to quit.\", 28, 64)\n    love.graphics.setColor(0.41, 0.78, 0.62)\n    love.graphics.circle(\"fill\", player.x, player.y, 18)\nend\n\nfunction love.keypressed(key)\n    if key == \"escape\" then love.event.quit() end\nend\n",
+        ".luarc.json": "{\n  \"runtime.version\": \"LuaJIT\",\n  \"diagnostics.globals\": [\n    \"love\"\n  ]\n}\n",
+        "README.md": "# LÖVE starter\n\nOpen this folder in Hulder. Install the Lua language extension and LuaLS for completion and diagnostics. Enable the LÖVE game tools add on and select Run game.\n\nMove with arrow keys or WASD. Escape closes the game.\n\nFor full LÖVE API completion, install matching LuaCATS definitions separately and add their location to workspace.library in .luarc.json.\n"
+      }
+    }
+  ]
+}

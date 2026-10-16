@@ -1,0 +1,9 @@
+{
+  "context_servers": {
+    "viking-factory": {
+      "command": "node",
+      "args": ["script/factory-mcp.mjs"],
+      "env": {"MIMIR_TOKEN_FILE": "/absolute/path/to/mimir/auth-token"}
+    }
+  }
+}

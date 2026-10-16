@@ -1,0 +1,9 @@
+[submodule "vendored-extensions/kotlin"]
+	path = vendored-extensions/kotlin
+	url = https://github.com/zed-extensions/kotlin.git
+[submodule "vendored-extensions/java"]
+	path = vendored-extensions/java
+	url = https://github.com/zed-extensions/java.git
+[submodule "vendored-extensions/lua"]
+	path = vendored-extensions/lua
+	url = https://github.com/zed-extensions/lua.git

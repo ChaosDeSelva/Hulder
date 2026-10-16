@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+set -euo pipefail
+if [[ $# -ne 2 ]]; then
+  echo 'Usage: script/sign-hulder /path/to/Hulder.app "Developer ID Application: Your Name (TEAMID)"' >&2
+  exit 2
+fi
+app=$1
+identity=$2
+[[ -d "$app/Contents" ]] || { echo 'Missing app bundle' >&2; exit 1; }
+[[ "$identity" == 'Developer ID Application: '* ]] || { echo 'A Developer ID Application identity is required' >&2; exit 1; }
+root=$(cd "$(dirname "$0")/.." && pwd)
+codesign --force --options runtime --timestamp --entitlements "$root/crates/zed/resources/zed.entitlements" --sign "$identity" "$app"
+codesign --verify --deep --strict --verbose=2 "$app"
+echo 'Signed locally. Notarization is a separate explicit release step; see RELEASE.md.'

@@ -1,0 +1,20 @@
+#!/bin/bash
+set -euo pipefail
+case "${1:-open}" in
+  open) exec open http://127.0.0.1:4320 ;;
+  fleet) exec open "http://127.0.0.1:4320/?view=fleet" ;;
+  status)
+    status=0
+    for target in 'Mimir|http://127.0.0.1:7700/v1/health' 'Sindri|http://127.0.0.1:4310/v1/health' 'Heimdall|http://127.0.0.1:4320/'; do
+      name=${target%%|*}; url=${target#*|}
+      if curl --noproxy '*' --connect-timeout 2 --max-time 5 --silent --fail --output /dev/null "$url"; then
+        printf '%s: reachable\n' "$name"
+      else printf '%s: unavailable\n' "$name"; status=1; fi
+    done
+    exit "$status" ;;
+  start)
+    : "${FACTORY_LAUNCHER:?Set FACTORY_LAUNCHER to your local factory.mjs path}"
+    test -f "$FACTORY_LAUNCHER" || { printf 'Factory launcher not found\n' >&2; exit 1; }
+    exec node "$FACTORY_LAUNCHER" ;;
+  *) printf 'Usage: factory {open|fleet|status|start}\n' >&2; exit 2 ;;
+esac

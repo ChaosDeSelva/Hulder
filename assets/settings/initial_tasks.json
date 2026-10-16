@@ -1,0 +1,78 @@
+// Project tasks configuration. See https://zed.dev/docs/tasks for documentation.
+//
+// Every task runs in the terminal panel with the shell's environment. The
+// variables below ($ZED_FILE, $ZED_STEM, $ZED_WORKTREE_ROOT, ...) are filled
+// in from the active editor when the task is spawned.
+//
+// Other fields a task may carry:
+//   "env": { "FOO": "bar" }        env overrides, appended to the terminal's environment
+//   "use_new_terminal": false      new terminal tab or reuse the task's existing one
+//   "allow_concurrent_runs": false run again while a previous run is still going
+//   "reveal": "always"             always | no_focus | never
+//   "reveal_target": "dock"        dock | center
+//   "hide": "never"                never | always | on_success
+//   "shell": "system"              or { "program": "sh" } / { "with_arguments": { ... } }
+//   "show_summary": true, "show_command": true
+//   "save": "none"                 all | current | none
+//   "tags": []                     match gutter runnables (e.g. "cpp-main")
+//   "hooks": ["create_worktree"]   run automatically on an event
+[
+  {
+    "label": "cargo run",
+    "command": "cargo",
+    "args": ["run"],
+    "cwd": "$ZED_WORKTREE_ROOT",
+    "save": "all",
+  },
+  {
+    "label": "cargo test",
+    "command": "cargo",
+    "args": ["test"],
+    "cwd": "$ZED_WORKTREE_ROOT",
+    "save": "all",
+  },
+  {
+    "label": "cargo build",
+    "command": "cargo",
+    "args": ["build"],
+    "cwd": "$ZED_WORKTREE_ROOT",
+    "save": "all",
+  },
+  {
+    // Hulder joins command and args into one raw line for your shell, so no
+    // path goes on that line. Paths travel in `env` (Zed substitutes $ZED_*
+    // there and hands the values to the process unparsed) and the script,
+    // passed single-quoted as a single arg, expands them only inside double
+    // quotes. A path with spaces, quotes or `$(` is safe.
+    "label": "C++: compile and run active file",
+    "command": "sh",
+    "args": [
+      "-c",
+      "'mkdir -p \"$HULDER_BIN\" && \"$HULDER_CC\" -g -O0 \"$HULDER_FILE\" -o \"$HULDER_BIN/$HULDER_STEM\" && exec \"$HULDER_BIN/$HULDER_STEM\"'",
+    ],
+    "env": {
+      "HULDER_BIN": "$ZED_WORKTREE_ROOT/.hulder/bin",
+      "HULDER_FILE": "$ZED_FILE",
+      "HULDER_STEM": "$ZED_STEM",
+      "HULDER_CC": "clang++",
+    },
+    "cwd": "$ZED_WORKTREE_ROOT",
+    "save": "current",
+    "tags": ["cpp-main"],
+  },
+  {
+    "label": "Run active file (shebang)",
+    "command": "sh",
+    // Refuses a file without a `#!` line and runs the file through its own
+    // interpreter line, so nothing is chmod'ed and no non-script is exec'd.
+    // Same mechanism as above: the path arrives in `env`, the script is
+    // single-quoted and so uses double quotes throughout.
+    "args": [
+      "-c",
+      "'if [ \"$(head -c 2 \"$HULDER_FILE\")\" != \"#!\" ]; then echo \"$HULDER_FILE does not start with #!; refusing to run it\" >&2; exit 1; fi; interp=$(sed -n \"1s/^#!//p\" \"$HULDER_FILE\"); exec $interp \"$HULDER_FILE\"'",
+    ],
+    "env": { "HULDER_FILE": "$ZED_FILE" },
+    "cwd": "$ZED_DIRNAME",
+    "save": "current",
+  },
+]

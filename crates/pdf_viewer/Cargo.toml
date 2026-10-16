@@ -1,0 +1,47 @@
+[package]
+name = "pdf_viewer"
+version = "0.1.0"
+edition.workspace = true
+publish.workspace = true
+license = "GPL-3.0-or-later"
+
+[lints]
+workspace = true
+
+[lib]
+path = "src/pdf_viewer.rs"
+doctest = false
+
+[dependencies]
+anyhow.workspace = true
+clippings.workspace = true
+collections.workspace = true
+editor.workspace = true
+file_icons.workspace = true
+gpui.workspace = true
+image.workspace = true
+language.workspace = true
+log.workspace = true
+project.workspace = true
+settings.workspace = true
+smallvec.workspace = true
+ui.workspace = true
+util.workspace = true
+workspace.workspace = true
+
+[target.'cfg(target_os = "macos")'.dependencies]
+core-foundation.workspace = true
+core-graphics.workspace = true
+foreign-types.workspace = true
+objc.workspace = true
+
+[dev-dependencies]
+util = { workspace = true, features = ["test-support"] }
+gpui = { workspace = true, features = ["test-support"] }
+project = { workspace = true, features = ["test-support"] }
+settings = { workspace = true, features = ["test-support"] }
+fs.workspace = true
+theme.workspace = true
+theme_settings.workspace = true
+serde_json.workspace = true
+workspace = { workspace = true, features = ["test-support"] }

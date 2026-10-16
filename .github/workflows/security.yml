@@ -1,0 +1,30 @@
+name: Source security check
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - Cargo.toml
+      - Cargo.lock
+      - 'crates/**/Cargo.toml'
+      - script/audit-release.py
+      - script/test-audit-release.py
+permissions:
+  contents: read
+jobs:
+  dependencies:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+      - name: Validate audit rules
+        run: python3 script/test-audit-release.py
+      - name: Audit supported dependencies
+        run: python3 script/audit-release.py --output "$RUNNER_TEMP/hulder-security.json"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hulder-security-report
+          path: ${{ runner.temp }}/hulder-security.json
+          if-no-files-found: ignore

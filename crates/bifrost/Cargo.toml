@@ -1,0 +1,49 @@
+[package]
+name = "bifrost"
+version = "0.1.0"
+edition.workspace = true
+publish.workspace = true
+license = "GPL-3.0-or-later"
+
+[lints]
+workspace = true
+
+[lib]
+path = "src/bifrost.rs"
+doctest = false
+
+[dependencies]
+anyhow.workspace = true
+chrono.workspace = true
+clippings.workspace = true
+editor.workspace = true
+fs.workspace = true
+futures.workspace = true
+glosses.workspace = true
+gpui.workspace = true
+hulder_net.workspace = true
+language.workspace = true
+libc.workspace = true
+lightpanda.workspace = true
+log.workspace = true
+lsp.workspace = true
+path.workspace = true
+paths.workspace = true
+project.workspace = true
+raven.workspace = true
+saga.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+smol.workspace = true
+text.workspace = true
+util.workspace = true
+workspace.workspace = true
+
+[dev-dependencies]
+fs = { workspace = true, features = ["test-support"] }
+gpui = { workspace = true, features = ["test-support"] }
+hoard.workspace = true
+project = { workspace = true, features = ["test-support"] }
+settings = { workspace = true, features = ["test-support"] }
+tempfile.workspace = true
+workspace = { workspace = true, features = ["test-support"] }
