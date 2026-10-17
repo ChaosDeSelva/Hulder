@@ -1,22 +1,22 @@
 /* Shared visual tokens for the public site and local application. */
 :root {
-  --canvas: #f6f5ef;
-  --surface: #fffefa;
-  --surface-muted: #efeee6;
-  --ink: #232821;
-  --muted: #62675d;
-  --line: #d5d6c9;
-  --line-strong: #a6ab9b;
-  --accent: #ad401c;
-  --accent-hover: #8c3114;
-  --forest: #275642;
-  --forest-soft: #e5eee5;
-  --amber: #785316;
-  --amber-soft: #f6edcf;
-  --danger: #a13329;
-  --danger-soft: #faeae5;
+  --canvas: #101914;
+  --surface: #18251e;
+  --surface-muted: #1e2e25;
+  --ink: #eee9d6;
+  --muted: #bec8bb;
+  --line: #34483a;
+  --line-strong: #506854;
+  --accent: #d5b478;
+  --accent-hover: #e8c992;
+  --forest: #b8d5aa;
+  --forest-soft: #243a2b;
+  --amber: #e4c58a;
+  --amber-soft: #2b281c;
+  --danger: #f2aca0;
+  --danger-soft: #39221f;
   --radius: 8px;
   --font-sans: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
-  color-scheme: light;
+  color-scheme: dark;
 }
