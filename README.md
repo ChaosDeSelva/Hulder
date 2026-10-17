@@ -10,6 +10,7 @@
 </p>
 
 <p align="center">
+  <a href="https://chaosdeselva.github.io/Hulder/guide.html">Read in dark mode</a> ·
   <a href="#install">Install</a> ·
   <a href="#what-it-is">What it is</a> ·
   <a href="#features">Features</a> ·
@@ -137,8 +138,7 @@ Design documents: `docs/superpowers/specs/` and `docs/superpowers/plans/`.
 
 ## Contributing
 
-Issues and pull requests are welcome. Keep the rule: no network, no AI in the editor, agents in the terminal.
-Every PR keeps the review marker at the top of this file until the author has read their own diff.
+Issues and pull requests are welcome. Keep agents in the terminal and make network access explicit. Review your diff before submitting.
 
 See [the Hulder guide](HULDER_GUIDE.md), [release instructions](RELEASE.md) and [security policy](SECURITY.md).
 
