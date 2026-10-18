@@ -2188,6 +2188,7 @@ name = "bifrost"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "bifrost-core",
  "chrono",
  "clippings",
  "editor",
@@ -2215,6 +2216,18 @@ dependencies = [
  "text",
  "util",
  "workspace",
+]
+
+[[package]]
+name = "bifrost-core"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "libc",
+ "serde",
+ "serde_json",
+ "smol",
+ "tempfile",
 ]
 
 [[package]]
@@ -3076,6 +3089,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "askpass",
+ "bifrost-core",
  "clap",
  "clap_complete",
  "clap_complete_nushell",

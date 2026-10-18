@@ -93,6 +93,7 @@ members = [
     "crates/cdp",
     "crates/clippings",
     "crates/bifrost",
+    "crates/bifrost-core",
     "crates/herd_panel",
     "crates/hoard",
     "crates/glosses",
@@ -381,6 +382,7 @@ browser = { path = "crates/browser" }
 cdp = { path = "crates/cdp" }
 clippings = { path = "crates/clippings" }
 bifrost = { path = "crates/bifrost" }
+bifrost-core = { path = "crates/bifrost-core" }
 herd_panel = { path = "crates/herd_panel" }
 hoard = { path = "crates/hoard" }
 glosses = { path = "crates/glosses" }

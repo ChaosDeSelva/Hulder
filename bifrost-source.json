@@ -1,0 +1,23 @@
+{
+  "project": "Bifrost",
+  "version": "0.1.0",
+  "files": {
+    "crates/bifrost-core/Cargo.toml": "7fb9f9b2124d806ae23fef95beff0df7c762530c10b0457af2a2f658541287dd",
+    "crates/bifrost-core/LICENSE": "0aa0322ea494da441088e4d9144c6720bf99d9e2e1eefcd29d1f58b19b5c4246",
+    "crates/bifrost-core/NOTICE": "6db2c1f49856006d557ed04f4308f67efccb705adc2953a7255e9babc6c3815c",
+    "crates/bifrost-core/src/bifrost.rs": "1d721842c336175f17c4030805693a5b2c61f63fc44ee090b9a546e2f85e793b",
+    "crates/bifrost-core/src/guard.rs": "43af4da9d06da9a37b099fc3191cd02c7f1efa25307d29a7af16e14ca9051918",
+    "crates/bifrost-core/src/main.rs": "2954587fea4c6f3e24c888c3c463abd26cccfbe4831a5bb170f2926cd9a51b66",
+    "crates/bifrost-core/src/mcp.rs": "d638e61a705ba0e1680943f082fc0a2bbcb0da8764846629d2835f78501bd7aa",
+    "crates/bifrost-core/src/protocol.rs": "5274813d96d0b3f413c656b43331fede53a90a81433d1dd965e0ceeb1391476d",
+    "crates/bifrost-core/src/server.rs": "bf068309671993f88fd9e6da02b69322de2a3cd2717502f22a5bab8c72009762",
+    "crates/bifrost/Cargo.toml": "3cc7e0e747dc3a2285fe0990ebdb353a0c0aa77f796c622b1c6c8cef5b80ae44",
+    "crates/bifrost/src/bifrost.rs": "770d0badfc883b7c46a5c39bab4fe51beb7d2d1796e513c40f36e55301e5ae63",
+    "crates/bifrost/src/dispatch.rs": "0a31c03d4fa81c5d7c42c5acfadf2cffe06582783e07c1450180fb5a4aab8582",
+    "crates/bifrost/src/gloss_tools.rs": "77f63b3113670ecaf2386f3adfcbf247d9243184ac8d988c855a2e38df23d197",
+    "crates/bifrost/src/raven_tools.rs": "3509fddd700fabfab88c5eb3715623f405c4aafc2ee805ad229cabe54d9c69cd",
+    "crates/bifrost/src/server.rs": "c7572bf13d17bb3c38a0b63bd2e027749c9bdcbdc96edcdd6d9a5df7da555623",
+    "crates/bifrost/src/share.rs": "f485453940fe61316b8b187d988669ddc505f5e6b65a911a40991e45715ac171",
+    "crates/cli/src/mcp.rs": "219eef2a32ce14bacd058f3c162b37e0e757540e5fe132ceaa782ce6c91e6dc9"
+  }
+}

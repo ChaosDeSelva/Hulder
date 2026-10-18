@@ -1,7 +1,7 @@
 pub mod dispatch;
 pub mod gloss_tools;
-pub mod guard;
-pub mod protocol;
+pub use bifrost_core::guard;
+pub use bifrost_core::protocol;
 pub mod raven_tools;
 pub mod server;
 pub mod share;

@@ -13,6 +13,7 @@ path = "src/bifrost.rs"
 doctest = false
 
 [dependencies]
+bifrost-core.workspace = true
 anyhow.workspace = true
 chrono.workspace = true
 clippings.workspace = true

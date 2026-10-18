@@ -1,0 +1,5 @@
+Bifrost was extracted from the Hulder IDE project in October 2026.
+The extracted bridge and IDE integration retain GPL version 3 or later.
+Hulder is derived from Zed. Existing authorship and applicable upstream rights
+are preserved; extraction does not grant additional rights to upstream code.
+Third party Rust dependencies retain their own licenses.

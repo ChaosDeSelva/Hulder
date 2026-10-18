@@ -155,3 +155,11 @@ Veil is a playful visual privacy screen, not an operating-system lock. Each lock
 ## Extensions and add ons
 
 Customize Hulder with language and appearance extensions, or install native feature add ons with commands, settings and project templates. See [the extension guide](EXTENSIONS.md) and [LÖVE game tools](examples/addons/love/README.md). Feature add ons use explicit command approval and start disabled after installation or updates.
+
+## Bifrost source ownership
+
+Bifrost is maintained as a separate project. This repository embeds its core and native adapter so Hulder builds remain self contained. The `hulder mcp` command is unchanged. See [Bifrost integration](BIFROST_INTEGRATION.md) for updating and verifying the embedded source.
+
+## Experimental release status
+
+The planned public source tag is `v0.1.0`. See [release scope and setup](RELEASE-v0.1.0.md) for tested behavior and acceptance limits. Manual accessibility testing is pending. Vendor integrations without authenticated live acceptance remain experimental.

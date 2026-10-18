@@ -1,0 +1,25 @@
+[package]
+name = "bifrost-core"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.98"
+license = "GPL-3.0-or-later"
+description = "Local MCP transport and workspace guards for the Hulder IDE"
+publish = false
+
+[lib]
+path = "src/bifrost.rs"
+
+[[bin]]
+name = "bifrost"
+path = "src/main.rs"
+
+[dependencies]
+anyhow = "1.0.86"
+libc = "0.2"
+serde = { version = "1.0", features = ["derive", "rc"] }
+serde_json = { version = "1.0.144", features = ["preserve_order", "raw_value"] }
+smol = "2.0"
+
+[dev-dependencies]
+tempfile = "3.20.0"
