@@ -34,6 +34,6 @@ Dependency, build and environment directories such as node_modules, target, dist
 
 ## App updates
 
-Use Hulder > Check for Updates to check immediately. Automatic Update Checks lets you turn scheduled checks on or off; the preference is saved as auto_update in user settings. Automatic checks run shortly after launch and once per day while the IDE is open, including after a long sleep. GitHub preview releases are included. Network errors during automatic checks are quiet; a manual check reports errors.
+Use Hulder > Check for Updates to check immediately. Automatic Update Checks lets you turn scheduled checks on or off; the preference is saved as auto_update in user settings. Automatic checks run shortly after launch and every 24 hours of runtime while the IDE is open. GitHub preview releases are included. Network errors during automatic checks are quiet; a manual check reports errors.
 
 Choose Download update when prompted. Hulder verifies the GitHub asset SHA256, its pinned Developer ID team and Apple notarization, then reveals the installer in Finder. Open the disk image, quit Hulder, drag the new app to Applications and reopen it. Updates do not overwrite the running app or force a restart. Downloaded installers are stored in the Hulder data directory under updates; remove them after installing to reclaim disk space. GitHub receives normal release requests, without project content or account credentials.
