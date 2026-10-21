@@ -447,7 +447,7 @@ impl Kit {
             .collect()
     }
 
-    /// Names of the servers whose command's file name matches a live process.
+    /// Commands whose executable file name matches a live process.
     pub fn running_commands(
         process_names: impl IntoIterator<Item = String>,
         servers: &[McpServer],
@@ -460,7 +460,7 @@ impl Kit {
                     .file_name()
                     .is_some_and(|name| live.contains(&*name.to_string_lossy()))
             })
-            .map(|server| server.name.clone())
+            .map(|server| server.command.clone())
             .collect()
     }
 
@@ -680,9 +680,12 @@ impl Kit {
                                 .size(IconSize::Small)
                                 .color(Color::Muted),
                             skill.name.clone(),
-                            Some(subtitle),
+                            Some(format!("{} · {}", skill.path, subtitle)),
                         )
-                        .tooltip(Tooltip::text(skill.description.clone()))
+                        .tooltip(Tooltip::text(format!(
+                            "{}\n{}",
+                            skill.path, skill.description
+                        )))
                         .on_click(cx.listener(
                             move |this, _: &ClickEvent, window, cx| {
                                 this.open_relative_path(&path, window, cx);
@@ -731,7 +734,7 @@ impl Kit {
                                 .size(IconSize::Small)
                                 .color(Color::Muted),
                             agent.name.clone(),
-                            Some(subtitle),
+                            Some(format!("{} · {}", agent.path, subtitle)),
                         )
                         .on_click(cx.listener(
                             move |this, _: &ClickEvent, window, cx| {
@@ -779,7 +782,8 @@ impl Kit {
                         .iter()
                         .enumerate()
                         .map(|(index, server)| {
-                            let running = self.results.running.contains(&server.name);
+                            let running = self.results.running.contains(&server.command);
+                            let path = server.path.clone();
                             let source = match server.source {
                                 McpSource::Project => None,
                                 McpSource::User => Some(" (user)"),
@@ -794,7 +798,7 @@ impl Kit {
                                     .size(IconSize::Small)
                                     .color(Color::Muted),
                                 format!("{}{}", server.name, source.unwrap_or_default()),
-                                Some(subtitle),
+                                Some(format!("{} · {}", server.path, subtitle)),
                             )
                             .end_slot::<Indicator>(
                                 running.then(|| Indicator::dot().color(Color::Success)),
@@ -806,8 +810,8 @@ impl Kit {
                             }));
                             match server.source {
                                 McpSource::Project => item.on_click(cx.listener(
-                                    |this, _: &ClickEvent, window, cx| {
-                                        this.open_relative_path(scan::MCP_FILE, window, cx);
+                                    move |this, _: &ClickEvent, window, cx| {
+                                        this.open_relative_path(&path, window, cx);
                                     },
                                 )),
                                 McpSource::User => item.on_click(cx.listener(
@@ -838,7 +842,14 @@ impl Kit {
                         .size(IconSize::Small)
                         .color(Color::Success),
                     rule.label.clone(),
-                    rule.detail.clone(),
+                    Some(format!(
+                        "{}{}",
+                        rule.path,
+                        rule.detail
+                            .as_ref()
+                            .map(|detail| format!(" · {detail}"))
+                            .unwrap_or_default()
+                    )),
                 )
                 .on_click(cx.listener(move |this, _: &ClickEvent, window, cx| {
                     this.open_relative_path(&path, window, cx);
@@ -852,7 +863,7 @@ impl Kit {
                         .size(IconSize::Small)
                         .color(Color::Disabled),
                     name.to_string(),
-                    Some("missing".to_string()),
+                    Some("missing at workspace root".to_string()),
                 )
                 .end_slot::<Button>((name == "AGENTS.md").then(|| {
                     Button::new("kit-create-agents-md", "Create AGENTS.md")
@@ -1029,25 +1040,31 @@ mod tests {
                 command: "/usr/local/bin/lightpanda".into(),
                 args: vec!["mcp".into()],
                 source: McpSource::Project,
+                path: scan::MCP_FILE.into(),
             },
             McpServer {
                 name: "hulder".into(),
                 command: "hulder".into(),
                 args: Vec::new(),
                 source: McpSource::Project,
+                path: scan::MCP_FILE.into(),
             },
             McpServer {
                 name: "empty".into(),
                 command: String::new(),
                 args: Vec::new(),
                 source: McpSource::User,
+                path: "~/.claude.json".into(),
             },
         ];
         let running = Kit::running_commands(
             ["lightpanda".to_string(), "zsh".to_string(), String::new()],
             &servers,
         );
-        assert_eq!(running, HashSet::from_iter(["panda".to_string()]));
+        assert_eq!(
+            running,
+            HashSet::from_iter(["/usr/local/bin/lightpanda".to_string()])
+        );
     }
 
     #[test]

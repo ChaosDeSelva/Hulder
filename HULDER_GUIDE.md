@@ -23,3 +23,11 @@ Use View Dependency Licenses for bundled dependency notices. The source README a
 ## Release status
 
 macOS is the initial supported build target. A development build is not a notarized public release. See RELEASE.md for packaging and verification.
+
+## Kit discovery in nested projects
+
+Kit lists recognized configuration across the first visible workspace tree, including nested project directories. Each row shows its source path, and clicking opens that file. Discovery is an inventory, not a claim that every listed rule or server applies to every agent session. Agent configuration scope is still determined by that agent and its working directory.
+
+Supported discovery includes CLAUDE.md, AGENTS.md, .rules, .mcp.json, Claude settings, commands and agent definitions, plus SKILL.md files in .claude/skills, .agents/skills, .codex/skills and skills. Root missing rule indicators remain specific to the workspace root. Nested MCP servers with the same name remain separate.
+
+Dependency, build and environment directories such as node_modules, target, dist, build, vendor, .git and .venv are excluded. Kit uses the editor worktree snapshot; files excluded from that snapshot and additional workspace roots are not included. Listing a nested configuration does not load or execute its tools.

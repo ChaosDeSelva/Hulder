@@ -39,6 +39,7 @@ pub struct McpServer {
     pub command: String,
     pub args: Vec<String>,
     pub source: McpSource,
+    pub path: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -71,12 +72,7 @@ const MUST_HAVE: [&str; 2] = ["AGENTS.md", "CLAUDE.md"];
 
 /// Whether `path` is one the scan reads, so the app only loads those files.
 pub fn is_relevant(path: &str) -> bool {
-    is_skill_path(path)
-        || is_agent_path(path)
-        || path == MCP_FILE
-        || RULE_FILES.contains(&path)
-        || SETTINGS_FILES.contains(&path)
-        || is_command_path(path)
+    config_path(path).is_some()
 }
 
 pub fn relevant_paths(paths: &[String]) -> Vec<String> {
@@ -87,18 +83,55 @@ pub fn relevant_paths(paths: &[String]) -> Vec<String> {
         .collect()
 }
 
+fn config_path(path: &str) -> Option<&str> {
+    if path.split('/').any(|part| matches!(part, "" | "." | "..")) {
+        return None;
+    }
+    let config = std::iter::once(path)
+        .chain(path.match_indices('/').map(|(index, _)| &path[index + 1..]))
+        .find(|candidate| {
+            is_skill_path(candidate)
+                || is_agent_path(candidate)
+                || *candidate == MCP_FILE
+                || RULE_FILES.contains(candidate)
+                || SETTINGS_FILES.contains(candidate)
+                || is_command_path(candidate)
+        })?;
+    let scope = &path[..path.len() - config.len()];
+    if scope.split('/').any(|part| {
+        matches!(
+            part,
+            ".git"
+                | "node_modules"
+                | "target"
+                | "dist"
+                | "build"
+                | ".venv"
+                | "venv"
+                | "vendor"
+                | ".next"
+                | "__pycache__"
+        )
+    }) {
+        return None;
+    }
+    Some(config)
+}
+
 fn is_skill_path(path: &str) -> bool {
-    let Some(rest) = path
-        .strip_prefix(".claude/skills/")
-        .or_else(|| path.strip_prefix("skills/"))
-    else {
+    let Some(rest) = [
+        ".claude/skills/",
+        ".agents/skills/",
+        ".codex/skills/",
+        "skills/",
+    ]
+    .iter()
+    .find_map(|prefix| path.strip_prefix(prefix)) else {
         return false;
     };
     let mut components = rest.split('/');
-    matches!(
-        (components.next(), components.next(), components.next()),
-        (Some(dir), Some("SKILL.md"), None) if !dir.is_empty()
-    )
+    matches!((components.next(), components.next(), components.next()),
+        (Some(dir), Some("SKILL.md"), None) if !dir.is_empty())
 }
 
 fn is_agent_path(path: &str) -> bool {
@@ -189,7 +222,7 @@ fn file_stem(path: &str) -> &str {
     name.strip_suffix(".md").unwrap_or(name)
 }
 
-fn parse_servers(json: &str, source: McpSource) -> anyhow::Result<Vec<McpServer>> {
+fn parse_servers(json: &str, source: McpSource, path: &str) -> anyhow::Result<Vec<McpServer>> {
     let root: serde_json::Value = serde_json::from_str(json)?;
     let Some(servers) = root.get("mcpServers").and_then(|value| value.as_object()) else {
         return Ok(Vec::new());
@@ -213,6 +246,7 @@ fn parse_servers(json: &str, source: McpSource) -> anyhow::Result<Vec<McpServer>
                 })
                 .unwrap_or_default(),
             source,
+            path: path.to_string(),
         })
         .collect())
 }
@@ -241,7 +275,10 @@ pub fn scan(
     let mut result = KitScan::default();
     for path in sorted {
         let path = path.as_str();
-        if is_skill_path(path) {
+        let Some(config) = config_path(path) else {
+            continue;
+        };
+        if is_skill_path(config) {
             let text = read(path).unwrap_or_default();
             let (fields, body) = parse_front_matter(&text);
             let description = fields.get("description").cloned().unwrap_or_default();
@@ -254,7 +291,7 @@ pub fn scan(
                 description,
                 path: path.to_string(),
             });
-        } else if is_agent_path(path) {
+        } else if is_agent_path(config) {
             let text = read(path).unwrap_or_default();
             let (fields, _) = parse_front_matter(&text);
             result.agents.push(AgentDef {
@@ -266,25 +303,25 @@ pub fn scan(
                 tools: fields.get("tools").cloned(),
                 path: path.to_string(),
             });
-        } else if path == MCP_FILE {
-            match read(path).map(|json| parse_servers(&json, McpSource::Project)) {
+        } else if config == MCP_FILE {
+            match read(path).map(|json| parse_servers(&json, McpSource::Project, path)) {
                 Some(Ok(servers)) => result.mcp.extend(servers),
-                Some(Err(error)) => log::warn!("kit: cannot parse {MCP_FILE}: {error:#}"),
+                Some(Err(error)) => log::warn!("kit: cannot parse {path}: {error:#}"),
                 None => {}
             }
-        } else if RULE_FILES.contains(&path) {
+        } else if RULE_FILES.contains(&config) {
             result.rules.found.push(Rule {
                 label: path.to_string(),
                 path: path.to_string(),
                 detail: None,
             });
-        } else if SETTINGS_FILES.contains(&path) {
+        } else if SETTINGS_FILES.contains(&config) {
             result.rules.found.push(Rule {
                 label: path.to_string(),
                 path: path.to_string(),
                 detail: read(path).and_then(|json| settings_detail(&json)),
             });
-        } else if is_command_path(path) {
+        } else if is_command_path(config) {
             result.rules.found.push(Rule {
                 label: format!("/{}", file_stem(path)),
                 path: path.to_string(),
@@ -294,13 +331,13 @@ pub fn scan(
     }
 
     if let Some(json) = user_config {
-        match parse_servers(json, McpSource::User) {
+        match parse_servers(json, McpSource::User, "~/.claude.json") {
             Ok(servers) => {
                 for server in servers {
                     if !result
                         .mcp
                         .iter()
-                        .any(|existing| existing.name == server.name)
+                        .any(|existing| existing.path == MCP_FILE && existing.name == server.name)
                     {
                         result.mcp.push(server);
                     }
@@ -508,18 +545,21 @@ mod tests {
                     command: "hulder".into(),
                     args: vec!["mcp".into()],
                     source: McpSource::Project,
+                    path: MCP_FILE.into(),
                 },
                 McpServer {
                     name: "weird".into(),
                     command: String::new(),
                     args: Vec::new(),
                     source: McpSource::Project,
+                    path: MCP_FILE.into(),
                 },
                 McpServer {
                     name: "panda".into(),
                     command: "/usr/local/bin/lightpanda".into(),
                     args: vec!["mcp".into(), "--port".into(), "9222".into()],
                     source: McpSource::User,
+                    path: "~/.claude.json".into(),
                 },
             ]
         );
@@ -572,6 +612,7 @@ mod tests {
                 (".claude/settings.json", Some("2 hook events")),
                 (".claude/settings.local.json", None),
                 ("/ship", Some("command")),
+                ("src/CLAUDE.md", None),
             ]
         );
         assert_eq!(scan.rules.missing, vec!["AGENTS.md"]);
@@ -604,6 +645,90 @@ mod tests {
                 ".claude/commands/c.md",
             ]
         );
+    }
+
+    #[test]
+    fn nested_projects_keep_distinct_config_paths_and_user_servers() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        for project in ["apps/web", "services/api"] {
+            write(
+                dir.path(),
+                &format!("{project}/.claude/skills/review/SKILL.md"),
+                "---\nname: Review\n---\nUse when reviewing.\n",
+            );
+            write(
+                dir.path(),
+                &format!("{project}/.claude/agents/builder.md"),
+                "builder",
+            );
+            write(
+                dir.path(),
+                &format!("{project}/.mcp.json"),
+                r#"{"mcpServers":{"shared":{"command":"worker"}}}"#,
+            );
+            write(dir.path(), &format!("{project}/AGENTS.md"), "rules");
+            write(
+                dir.path(),
+                &format!("{project}/.claude/settings.json"),
+                r#"{"hooks":{"Stop":[]}}"#,
+            );
+            write(
+                dir.path(),
+                &format!("{project}/.claude/commands/check.md"),
+                "check",
+            );
+        }
+        write(dir.path(), "apps/web/.agents/skills/test/SKILL.md", "test");
+        write(
+            dir.path(),
+            "services/api/.codex/skills/test/SKILL.md",
+            "test",
+        );
+        write(
+            dir.path(),
+            "apps/web/node_modules/pkg/AGENTS.md",
+            "dependency",
+        );
+        let result = scan_dir(
+            dir.path(),
+            Some(r#"{"mcpServers":{"shared":{"command":"global"}}}"#),
+        );
+        assert_eq!(result.skills.len(), 4);
+        assert_eq!(result.agents.len(), 2);
+        assert_eq!(
+            result
+                .mcp
+                .iter()
+                .map(|server| server.path.as_str())
+                .collect::<Vec<_>>(),
+            vec![
+                "apps/web/.mcp.json",
+                "services/api/.mcp.json",
+                "~/.claude.json"
+            ]
+        );
+        assert_eq!(result.rules.found.len(), 6);
+        assert_eq!(result.rules.missing, vec!["AGENTS.md", "CLAUDE.md"]);
+        assert!(result.skills.iter().all(|skill| skill.path.starts_with("apps/") || skill.path.starts_with("services/")));
+    }
+
+    #[test]
+    fn skips_dependency_build_and_unsafe_paths() {
+        for path in [
+            "node_modules/pkg/AGENTS.md",
+            "apps/web/target/.mcp.json",
+            ".git/CLAUDE.md",
+            "../AGENTS.md",
+            "/AGENTS.md",
+            "apps//AGENTS.md",
+            "apps/web/.venv/CLAUDE.md",
+        ] {
+            assert!(!is_relevant(path), "{path}");
+        }
+        assert!(is_relevant("apps/web/AGENTS.md"));
+        assert!(is_relevant("apps/web/.claude/skills/build/SKILL.md"));
+        assert!(is_relevant("skills/build/SKILL.md"));
+        assert!(is_relevant("apps/web/.claude/commands/check.md"));
     }
 
     #[test]
