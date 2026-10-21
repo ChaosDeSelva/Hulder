@@ -7859,11 +7859,23 @@ impl GitPanel {
 
     fn render_no_changes_ui(&self, cx: &Context<Self>) -> AnyElement {
         let show_branch_diff = self.changes_count == 0 && !self.is_on_main_branch(cx);
+        let git_store = self.project.read(cx).git_store().read(cx);
+        let repository_count = git_store.repositories().len();
+        let other_changed = git_store.repositories().values().filter(|repository| {
+            self.active_repository.as_ref() != Some(*repository)
+                && repository.read(cx).status_summary().count > 0
+        }).count();
 
         v_flex()
             .gap_1()
             .items_center()
-            .child(Label::new("No changes to commit").color(Color::Muted))
+            .child(Label::new("No changes in the selected repository").color(Color::Muted))
+            .when(repository_count > 1, |this| {
+                this.child(Label::new(format!("Changes in other repositories: {other_changed}")).color(Color::Muted))
+                    .child(Button::new("select-repository-empty", "Switch repository")
+                        .style(ButtonStyle::Outlined)
+                        .on_click(|_, window, cx| window.dispatch_action(zed_actions::git::SelectRepo.boxed_clone(), cx)))
+            })
             .when(show_branch_diff, |this| {
                 this.child(
                     Button::new("view_branch_diff", "View Branch Diff")

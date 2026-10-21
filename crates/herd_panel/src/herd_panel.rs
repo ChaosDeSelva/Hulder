@@ -280,12 +280,12 @@ fn herdr_terminal(id: &str, label: &str, args: Vec<String>) -> SpawnInTerminal {
     }
 }
 
-/// `herdr agent attach` for one agent pane.
+/// Attach by terminal ID; agent attach resolves names and pane IDs instead.
 pub fn attach_task(terminal_id: &str, label: &str) -> SpawnInTerminal {
     herdr_terminal(
         &format!("herd-attach-{terminal_id}"),
         &format!("herd: {label}"),
-        vec!["agent".into(), "attach".into(), terminal_id.to_string()],
+        vec!["terminal".into(), "attach".into(), terminal_id.to_string()],
     )
 }
 
@@ -866,10 +866,10 @@ mod tests {
     }
 
     #[test]
-    fn attach_task_runs_herdr_agent_attach() {
+    fn attach_task_uses_terminal_id_without_agent_resolution() {
         let task = attach_task("term_abc", "builder");
         assert_eq!(task.command.as_deref(), Some("herdr"));
-        assert_eq!(task.args, vec!["agent", "attach", "term_abc"]);
+        assert_eq!(task.args, vec!["terminal", "attach", "term_abc"]);
         assert_eq!(task.label, "herd: builder");
         assert!(task.use_new_terminal);
     }
