@@ -25,11 +25,13 @@ actions!(hulder, [CheckForUpdates, AutomaticUpdateChecks]);
 
 pub fn init(fs: Arc<dyn fs::Fs>, cx: &mut App) {
     cx.set_global(UpdateState::default());
-    cx.on_action(|_: &CheckForUpdates, cx| check(true, cx));
+    cx.on_action(|_: &CheckForUpdates, cx| cx.defer(|cx| check(true, cx)));
     cx.on_action(move |_: &AutomaticUpdateChecks, cx| {
+        let fs = fs.clone();
+        // Menu actions run while the window is borrowed by action dispatch.
+        cx.defer(move |cx| {
         let enabled = AutomaticUpdates::get_global(cx).0;
         let Some(window) = cx.active_window() else { return; };
-        let fs = fs.clone();
         match window.update(cx, |_, window, cx| {
             let answer = window.prompt(PromptLevel::Info, "Automatic update checks", Some(if enabled {
                 "Enabled: Hulder checks GitHub after opening and daily while running. Preview releases are included. Downloads require your choice."
@@ -40,6 +42,7 @@ pub fn init(fs: Arc<dyn fs::Fs>, cx: &mut App) {
                 }
             }).detach();
         }) { Ok(()) => {}, Err(error) => log::warn!("Update preferences: {error:#}") }
+        });
     });
     cx.spawn(async move |cx| {
         cx.background_executor()
