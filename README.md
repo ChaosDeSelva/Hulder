@@ -44,7 +44,9 @@ The name is Old Norse *hylja*, "to hide". The huldra are the hidden folk: lovely
 
 ## Install
 
-Hulder is not yet distributed as a signed app. Build it from a local source checkout with Rust and Xcode installed:
+Download the [signed and notarized Apple silicon app](https://github.com/ChaosDeSelva/Hulder/releases/download/v0.1.1/Hulder-0.1.1-macos-arm64.dmg). Open the disk image, drag Hulder to Applications, then open it. This is an experimental release; manual accessibility and a separate clean Mac acceptance remain pending. Language extensions and language servers are installed separately.
+
+To build from source with Rust and Xcode installed:
 
 ```sh
 # From the root of your Hulder source checkout:

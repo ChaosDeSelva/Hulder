@@ -40,6 +40,7 @@ shutil.copy2(root / "crates/zed/resources/Hulder.icns", resources / "Hulder.icns
 shutil.copy2(root / "crates/zed/resources/Document.icns", resources / "Document.icns")
 for name in ("LICENSE-GPL", "LICENSE-APACHE", "HULDER_GUIDE.md", "RELEASE.md"):
     shutil.copy2(root / name, resources / name)
+shutil.copy2(root / "assets/licenses.md", resources / "THIRD-PARTY-LICENSES.md")
 subprocess.run(["codesign", "--force", "--sign", "-", str(app)], check=True)
 subprocess.run(["codesign", "--verify", "--deep", "--strict", str(app)], check=True)
 print(f"Packaged Hulder ({args.channel}): {app}. Locally signed; Developer ID signing and notarization are required before public binary distribution.")
