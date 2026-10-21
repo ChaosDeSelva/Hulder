@@ -31,3 +31,7 @@ The editor, its extensions, terminals and explicitly connected agents can access
 Factory endpoints bind locally and require their documented authentication and approval controls. Do not expose them directly to the internet. Model providers and tools require their own credentials. Keep credentials and runtime state outside published source.
 
 This is a source release. Public Mac binaries require the separate signing, notarization and clean installation checks in RELEASE.md. A dependency audit is not a guarantee that the complete application has no defects.
+
+## Hulder installer updates
+
+The dedicated updater contacts the public ChaosDeSelva/Hulder GitHub release feed and accepts only matching Apple silicon installer URLs. It validates the asset size and SHA256 digest, the Developer ID team 3LS9LD88JX and Apple notarization before revealing the download. It does not send project files or credentials, change the shared editor HTTP policy or replace the running application. Disable automatic checks with auto_update: false; manual checking remains available.

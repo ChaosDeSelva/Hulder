@@ -24,7 +24,7 @@
 ## What it is
 
 Hulder is an independently maintained IDE derived from Zed, designed for local development.
-It does not require a Zed account or cloud subscription. The shared editor HTTP client refuses outbound requests, and the Hollow Back records refused requests. Explicit Raven requests and external tools have their own network behavior; see the privacy model below.
+It does not require a Zed account or cloud subscription. The shared editor HTTP client refuses outbound requests, and the Hollow Back records refused requests. The separate Hulder updater checks GitHub releases when automatic checks are enabled. Explicit Raven requests and external tools have their own network behavior; see the privacy model below.
 
 What it keeps is the fast native engine: GPU rendering, Tree-sitter, language servers,
 a real terminal, Vim mode, and a JetBrains keymap on by default.
@@ -53,6 +53,8 @@ To build from source with Rust and Xcode installed:
 cargo build --locked -p zed --bin Hulder --features util/debug-embed
 ./target/debug/Hulder
 ```
+
+Use **Hulder > Check for Updates** for a manual check, or **Automatic Update Checks** to control launch and daily checks. Updates download a verified installer; replacement and restart happen when you choose.
 
 Then **Install hulder CLI** from the app menu to get the `hulder` command.
 

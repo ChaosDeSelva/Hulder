@@ -53,3 +53,9 @@ Internal crate names, action IDs, `.zed` project configuration, upstream documen
 ## Source repository preparation
 
 Use a reviewed source snapshot with fresh Git history. Do not push the original checkout history, local build outputs, acceptance logs or credential stores. Before creating a release tag, run the checks in SECURITY.md and retain the resulting report with the release evidence. The initial supported target is Apple silicon macOS.
+
+## Native update feed
+
+Before building a public installer, set `VERSION` in `crates/zed/src/update_release.rs` to its distribution version. This is separate from the inherited Cargo compatibility version. Publish a matching `vVERSION` GitHub tag and `Hulder-VERSION-macos-arm64.dmg` asset with a GitHub SHA256 digest. The updater includes preview releases, selects the newest compatible version and ignores drafts.
+
+Sign and notarize both the app and the DMG. The updater pins the current publisher team ID and requires Apple notarization before offering the downloaded file. A signing team change requires an explicit updater migration. Check the native menu and download verification before publishing. The updater never replaces a running app automatically.

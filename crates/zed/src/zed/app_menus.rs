@@ -67,6 +67,8 @@ pub fn app_menus(cx: &mut App) -> Vec<Menu> {
             disabled: false,
             items: vec![
                 MenuItem::action("About Hulder", zed_actions::About),
+                MenuItem::action("Check for Updates…", crate::hulder_updates::CheckForUpdates),
+                MenuItem::action("Automatic Update Checks…", crate::hulder_updates::AutomaticUpdateChecks),
                 MenuItem::separator(),
                 MenuItem::submenu(Menu::new("Settings").items([
                     MenuItem::action("Open Settings", zed_actions::OpenSettings),

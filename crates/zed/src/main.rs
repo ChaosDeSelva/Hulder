@@ -1,6 +1,8 @@
 // Disable command line from opening on release mode
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+mod hulder_updates;
+mod update_release;
 mod watcher_debug;
 mod zed;
 
@@ -501,6 +503,7 @@ fn main() {
         Client::set_global(client.clone(), cx);
 
         zed::init(cx);
+        hulder_updates::init(fs.clone(), cx);
         #[cfg(target_os = "macos")]
         zed::move_to_applications::init(cx);
         project::Project::init(&client, cx);
