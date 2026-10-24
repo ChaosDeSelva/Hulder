@@ -163,7 +163,7 @@ struct GlobalNetLog(Entity<NetLog>);
 
 impl Global for GlobalNetLog {}
 
-/// Refuses every request like `http_client::BlockedHttpClient`, but remembers what was asked.
+/// Blocks service traffic while permitting public agent installation downloads.
 pub struct RecordingBlockedHttpClient {
     pending: SharedPending,
 }
@@ -174,11 +174,54 @@ impl RecordingBlockedHttpClient {
     }
 }
 
+fn is_local_feedback_graph(value: &str) -> bool {
+    Url::parse(value).is_ok_and(|url| {
+        url.scheme() == "http" && matches!(url.host_str(), Some("127.0.0.1") | Some("localhost"))
+            && url.port() == Some(8787) && url.path() == "/mcp"
+            && url.username().is_empty() && url.password().is_none() && url.query().is_none()
+    })
+}
+
+fn is_agent_download(method: &str, url: &str) -> bool {
+    let Ok(url) = Url::parse(url) else { return false; };
+    if method != "GET" || url.scheme() != "https" || !url.username().is_empty()
+        || url.password().is_some() || url.port().is_some_and(|port| port != 443)
+        || url.query().is_some() { return false; }
+    match url.host_str() {
+        Some("cdn.agentclientprotocol.com") => url.path().starts_with("/registry/"),
+        Some("nodejs.org") => url.path().starts_with("/dist/"),
+        Some("github.com") => url.path().contains("/releases/download/"),
+        Some("api.github.com") => url.path().starts_with("/repos/") && url.path().contains("/releases/"),
+        _ => false,
+    }
+}
+
 impl HttpClient for RecordingBlockedHttpClient {
     fn send(
         &self,
         request: Request<AsyncBody>,
     ) -> BoxFuture<'static, anyhow::Result<Response<AsyncBody>>> {
+        if is_local_feedback_graph(&request.uri().to_string()) {
+            self.pending.push(NetEntry { at: SystemTime::now(), kind: NetEntryKind::Bridge,
+                method: request.method().to_string(), url: "Feedback Graph MCP on localhost".into() });
+            return Box::pin(async move {
+                let mut request = request;
+                request.extensions_mut().insert(http_client::RedirectPolicy::NoFollow);
+                reqwest_client::ReqwestClient::user_agent("Hulder Feedback Graph")?.send(request).await
+            });
+        }
+        if is_agent_download(request.method().as_str(), &request.uri().to_string()) {
+            let url = request.uri().to_string();
+            self.pending.push(NetEntry {
+                at: SystemTime::now(), kind: NetEntryKind::Sent,
+                method: "GET".into(), url: url.clone(),
+            });
+            return Box::pin(async move {
+                // Do not forward application cookies, authorization or request bodies.
+                let client = reqwest_client::ReqwestClient::user_agent("Hulder agent installer")?;
+                client.get(&url, AsyncBody::empty(), true).await
+            });
+        }
         self.pending.push(NetEntry {
             at: SystemTime::now(),
             kind: NetEntryKind::Refused,
@@ -235,6 +278,24 @@ pub fn init(cx: &mut App) -> Arc<RecordingBlockedHttpClient> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn feedback_graph_is_limited_to_local_mcp() {
+        assert!(is_local_feedback_graph("http://127.0.0.1:8787/mcp"));
+        assert!(!is_local_feedback_graph("http://127.0.0.1:8787/api/import"));
+        assert!(!is_local_feedback_graph("http://example.com:8787/mcp"));
+        assert!(!is_local_feedback_graph("http://localhost:9999/mcp"));
+    }
+
+    #[test]
+    fn agent_download_policy_excludes_services_and_credentials() {
+        assert!(is_agent_download("GET", "https://cdn.agentclientprotocol.com/registry/v1/latest/registry.json"));
+        assert!(is_agent_download("GET", "https://github.com/agentclientprotocol/codex-acp/releases/download/v1/agent.zip"));
+        for url in ["https://api.zed.dev/api/telemetry", "https://github.com/login", "https://cdn.agentclientprotocol.com.evil.test/registry/x", "https://user:secret@nodejs.org/dist/x", "https://nodejs.org/dist/x?token=secret", "http://nodejs.org/dist/x"] {
+            assert!(!is_agent_download("GET", url));
+        }
+        assert!(!is_agent_download("POST", "https://nodejs.org/dist/x"));
+    }
 
     #[test]
     fn send_is_refused_and_recorded() {

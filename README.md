@@ -80,6 +80,9 @@ Language servers are never downloaded. Hulder finds the ones on your `PATH` (`vt
 - Markdown preview with Mermaid diagrams rendered natively, SVG and image viewers, CSV tables, and a PDF reader.
 
 ### Terminal and agents
+
+The [Hooks and agent activity inspector](docs/agent_activity.md) shows project and user hook configuration alongside recorded Claude and Codex tool activity. Open it with the wrench in the status bar.
+
 - **Herd** (`Cmd+Ctrl+H`): herdr workspaces and agents with live status; select an agent and its session attaches in an embedded terminal; a ram in the status bar counts agents waiting on you.
 - Toasts when an agent blocks or finishes.
 - **Saga** (`Cmd+Ctrl+Shift+T`): tales (tickets), verses (todos) and lore (notes) in `.hulder/`; send a tale to the shown agent or start an agent on it.

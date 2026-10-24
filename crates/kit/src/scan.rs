@@ -63,10 +63,17 @@ pub struct KitScan {
     pub agents: Vec<AgentDef>,
     pub mcp: Vec<McpServer>,
     pub rules: Rules,
+    pub hooks: Vec<crate::hooks::Hook>,
+    pub hook_errors: Vec<(String, String)>,
 }
 
 pub const MCP_FILE: &str = ".mcp.json";
-const SETTINGS_FILES: [&str; 2] = [".claude/settings.json", ".claude/settings.local.json"];
+const SETTINGS_FILES: [&str; 4] = [
+    ".claude/settings.json",
+    ".claude/settings.local.json",
+    ".codex/hooks.json",
+    ".codex/config.toml",
+];
 const RULE_FILES: [&str; 3] = ["CLAUDE.md", "AGENTS.md", ".rules"];
 const MUST_HAVE: [&str; 2] = ["AGENTS.md", "CLAUDE.md"];
 
@@ -316,6 +323,17 @@ pub fn scan(
                 detail: None,
             });
         } else if SETTINGS_FILES.contains(&config) {
+            if let Some(text) = read(path) {
+                let agent = if config.starts_with(".codex/") {
+                    "Codex"
+                } else {
+                    "Claude"
+                };
+                match crate::hooks::parse(&text, path, agent) {
+                    Ok(hooks) => result.hooks.extend(hooks),
+                    Err(error) => result.hook_errors.push((path.to_string(), error)),
+                }
+            }
             result.rules.found.push(Rule {
                 label: path.to_string(),
                 path: path.to_string(),
@@ -405,6 +423,31 @@ pub fn has_mcp_server(existing: Option<&str>, name: &str) -> bool {
 mod tests {
     use super::*;
     use std::path::Path;
+
+    #[test]
+    fn nested_hook_sources_and_errors_are_visible() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        write(
+            dir.path(),
+            "apps/game/.claude/settings.local.json",
+            r#"{"hooks":{"Stop":[{"hooks":[{"type":"command","command":"true"}]}]}}"#,
+        );
+        write(
+            dir.path(),
+            "apps/game/.codex/config.toml",
+            "[[hooks.Stop]]\n[[hooks.Stop.hooks]]\ntype='command'\ncommand='true'",
+        );
+        write(dir.path(), ".claude/settings.json", "invalid");
+        let scan = scan_dir(dir.path(), None);
+        assert_eq!(scan.hooks.len(), 2);
+        assert_eq!(scan.hook_errors.len(), 1);
+        assert!(
+            scan.hooks
+                .iter()
+                .all(|hook| hook.path.starts_with("apps/game/"))
+        );
+        assert!(!is_relevant("node_modules/vendor/.codex/hooks.json"));
+    }
 
     fn write(root: &Path, relative: &str, text: &str) {
         let path = root.join(relative);

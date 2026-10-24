@@ -426,9 +426,7 @@ fn main() {
         zed::watch_settings_files(fs.clone(), cx);
         handle_keymap_file_changes(user_keymap_file_rx, user_keymap_watcher, cx);
 
-        // Offline by construction: every HTTP request made through the app's
-        // global client fails closed. Telemetry, update checks, extension
-        // registry, language server and node downloads all go through here.
+        // Service traffic stays blocked; public agent installation downloads are allowed.
         let http_client = hulder_net::init(cx);
         cx.set_http_client(http_client);
 
@@ -573,6 +571,7 @@ fn main() {
         diagnostics::init(cx);
 
         workspace::init(app_state.clone(), cx);
+        agent_ui::init_external(app_state.fs.clone(), app_state.languages.clone(), cx);
         ui_prompt::init(cx);
 
         go_to_line::init(cx);

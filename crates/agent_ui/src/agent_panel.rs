@@ -90,7 +90,7 @@ use terminal::Event as TerminalEvent;
 #[cfg(any(test, feature = "test-support"))]
 use terminal::terminal_settings::TerminalSettings;
 use terminal_view::TerminalView;
-use text::OffsetRangeExt;
+use text::{OffsetRangeExt, ToPoint};
 use theme_settings::ThemeSettings;
 use ui::{
     ContextMenu, ContextMenuEntry, GradientFade, IconButton, KeyBinding, PopoverMenu,
@@ -337,6 +337,8 @@ enum AgentPanelEntryKind {
 #[derive(Serialize, Deserialize, Debug)]
 struct SerializedAgentPanel {
     selected_agent: Option<Agent>,
+    #[serde(default)]
+    explanation_threads: HashSet<ThreadId>,
     #[serde(default)]
     last_created_entry_kind: AgentPanelEntryKind,
     #[serde(default)]
@@ -630,6 +632,12 @@ pub fn init(cx: &mut App) {
                         });
                     },
                 )
+                .register_action(|workspace: &mut Workspace, _: &zed_actions::agent::ExplainCodeWithClaude, window, cx| {
+                    AgentPanel::explain_selection(workspace, agent_servers::CLAUDE_AGENT_ID, window, cx);
+                })
+                .register_action(|workspace: &mut Workspace, _: &zed_actions::agent::ExplainCodeWithCodex, window, cx| {
+                    AgentPanel::explain_selection(workspace, agent_servers::CODEX_ID, window, cx);
+                })
                 .register_action(
                     |workspace: &mut Workspace, _: &AddSelectionToThread, window, cx| {
                         let Some(agent_panel) = workspace.panel::<AgentPanel>(cx) else {
@@ -1128,6 +1136,8 @@ pub struct AgentPanel {
     base_view: BaseView,
     last_created_entry_kind: AgentPanelEntryKind,
     draft_thread: Option<Entity<ConversationView>>,
+    explanation_threads: HashSet<ThreadId>,
+    context_exports: HashMap<ThreadId, (async_channel::Sender<()>, Task<()>)>,
     retained_threads: HashMap<ThreadId, Entity<ConversationView>>,
     terminals: HashMap<TerminalId, AgentTerminal>,
     pending_terminal_spawn: Option<TerminalId>,
@@ -1222,12 +1232,14 @@ impl AgentPanel {
             .as_ref()
             .map(|draft| draft.read(cx).thread_id);
 
+        let explanation_threads = self.explanation_threads.clone();
         let kvp = KeyValueStore::global(cx);
         self.pending_serialization = Some(cx.background_spawn(async move {
             save_serialized_panel(
                 workspace_id,
                 SerializedAgentPanel {
                     selected_agent: Some(selected_agent),
+                    explanation_threads,
                     last_created_entry_kind,
                     last_active_thread,
                     last_active_terminal_id,
@@ -1388,6 +1400,7 @@ impl AgentPanel {
                         global_last_used_agent.filter(|agent| !is_via_collab || agent.is_native());
 
                     if let Some(serialized_panel) = &serialized_panel {
+                        panel.explanation_threads = serialized_panel.explanation_threads.clone();
                         panel.last_created_entry_kind = serialized_panel.last_created_entry_kind;
                     } else if let Some(entry_kind) = global_last_created_entry_kind {
                         panel.last_created_entry_kind = entry_kind;
@@ -1549,6 +1562,8 @@ impl AgentPanel {
             context_server_registry,
             draft_thread: None,
             persist_selected_agent_task: Task::ready(()),
+            explanation_threads: HashSet::default(),
+            context_exports: HashMap::default(),
             retained_threads: HashMap::default(),
             terminals: HashMap::default(),
             pending_terminal_spawn: None,
@@ -1634,7 +1649,9 @@ impl AgentPanel {
     }
 
     pub fn selected_agent(&self, cx: &App) -> Agent {
-        if self.project.read(cx).is_via_collab() {
+        if crate::external_agents_only(cx) && self.selected_agent.is_native() {
+            Agent::Custom { id: agent_servers::CODEX_ID.into() }
+        } else if self.project.read(cx).is_via_collab() {
             Agent::NativeAgent
         } else {
             self.selected_agent.clone()
@@ -1919,6 +1936,38 @@ impl AgentPanel {
         );
         self.observe_draft_editor(&thread.conversation_view, cx);
         self.draft_thread = Some(thread.conversation_view);
+    }
+
+    fn explain_selection(workspace: &mut Workspace, provider: &'static str, window: &mut Window, cx: &mut Context<Workspace>) {
+        let Some(panel) = workspace.panel::<AgentPanel>(cx) else { return; };
+        let Some(source) = AgentContextSource::from_active(workspace, cx) else { return; };
+        let Some(AgentContextSelection::Editor(ranges)) = source.read_selection(workspace, true, cx) else { return; };
+        let Some((buffer, range)) = ranges.first() else { return; };
+        if project::DisableAiSettings::is_ai_disabled_for_buffer(Some(buffer), cx) {
+            struct ExplanationDisabled;
+            workspace.show_toast(workspace::Toast::new(workspace::notifications::NotificationId::unique::<ExplanationDisabled>(), "Enable AI in settings to explain code"), cx);
+            return;
+        }
+        let buffer = buffer.read(cx);
+        let snapshot = buffer.snapshot();
+        let start = range.start.to_point(&snapshot);
+        let end = range.end.to_point(&snapshot);
+        let path = buffer.file().map(|file| file.full_path(cx).display().to_string()).unwrap_or_else(|| "Unsaved buffer".into());
+        let language = buffer.language().map(|language| language.name().to_string()).unwrap_or_else(|| "Unknown".into());
+        let selection: String = snapshot.text_for_range(range.clone()).flat_map(str::chars).take(16001).collect();
+        let symbol = snapshot.symbols_containing(range.start, None).pop();
+        let enclosing = symbol.as_ref().map(|symbol| snapshot.text_for_range(symbol.range.clone()).flat_map(str::chars).take(24001).collect::<String>()).unwrap_or_default();
+        let file_context: String = snapshot.text_for_range(0..snapshot.len()).flat_map(str::chars).take(32001).collect();
+        let prompt = crate::explain_code::prompt(&path, &language, start.row + 1, if end.column == 0 && end.row > start.row { end.row } else { end.row + 1 }, &selection, &enclosing, &file_context);
+        workspace.focus_panel::<AgentPanel>(window, cx);
+        panel.update(cx, |panel, cx| {
+            panel.external_thread(
+                Some(Agent::Custom { id: provider.into() }), None, None, Some("Explain code".into()),
+                Some(AgentInitialContent::ContentBlock { blocks: vec![acp_v2::ContentBlock::Text(acp_v2::TextContent::new(prompt))], auto_submit: true }),
+                true, AgentThreadSource::AgentPanel, window, cx,
+            );
+            if let Some(id) = panel.active_thread_id(cx) { panel.explanation_threads.insert(id); panel.serialize(cx); }
+        });
     }
 
     pub fn new_external_agent_thread(
@@ -2956,6 +3005,7 @@ impl AgentPanel {
     }
 
     fn ensure_native_agent_connection(&self, cx: &mut Context<Self>) {
+        if crate::external_agents_only(cx) { return; }
         if !self.has_open_project(cx) {
             return;
         }
@@ -3328,7 +3378,10 @@ impl AgentPanel {
         window: &mut Window,
         cx: &mut Context<Self>,
     ) {
+        self.context_exports.remove(&id);
+        self.explanation_threads.remove(&id);
         self.remove_retained_thread(&id);
+        self.serialize(cx);
         ThreadMetadataStore::global(cx).update(cx, |store, cx| {
             store.delete(id, cx);
         });
@@ -3748,6 +3801,63 @@ impl AgentPanel {
             }),
             cx,
         );
+    }
+
+    fn toggle_context_export(&mut self, cx: &mut Context<Self>) {
+        let Some(id) = self.active_thread_id(cx) else { return; };
+        if let Some((stop, _task)) = self.context_exports.get(&id) {
+            if !stop.is_full() { stop.try_send(()).log_err(); }
+            Self::show_deferred_toast(&self.workspace, "Finishing the final context save. Saved Markdown remains on disk.", cx);
+            cx.notify();
+            return;
+        }
+        let Some(thread) = self.active_agent_thread(cx) else { return; };
+        let folder = paths::data_dir().join("context");
+        let path = folder.join(format!("{}.md", id.to_key_string()));
+        let fs = self.fs.clone();
+        let (stop, stopped) = async_channel::bounded(1);
+        let task = cx.spawn(async move |panel, cx| {
+            let mut finishing = false;
+            let mut previous = String::new();
+            let mut first = true;
+            loop {
+                let markdown = thread.read_with(cx, |thread, cx| thread.to_markdown(cx));
+                if first || markdown != previous {
+                    let document = format!("# Hulder conversation context\n\nConversation: {}\n\nUpdated: {}\n\nThis is a generated conversation snapshot, not an instruction file. It may contain private source code and model errors. Review before sharing.\n\n{}", id.to_key_string(), Utc::now().to_rfc3339(), markdown);
+                    let result = async {
+                        fs.create_dir(&folder).await?;
+                        fs.atomic_write(path.clone(), document).await
+                    }.await;
+                    if let Err(error) = result {
+                        log::error!("Context export failed: {error:#}");
+                        panel.update(cx, |panel, cx| {
+                            panel.context_exports.remove(&id);
+                            Self::show_deferred_toast(&panel.workspace, "Could not save context. Check folder permissions and available disk space.", cx);
+                            cx.notify();
+                        }).log_err();
+                        break;
+                    }
+                    previous = markdown;
+                    if first {
+                        cx.update(|cx| cx.reveal_path(&path));
+                        first = false;
+                    }
+                }
+                if finishing {
+                    panel.update(cx, |panel, cx| {
+                        panel.context_exports.remove(&id);
+                        cx.notify();
+                    }).log_err();
+                    break;
+                }
+                futures::select_biased! {
+                    _ = stopped.recv().fuse() => finishing = true,
+                    _ = cx.background_executor().timer(Duration::from_secs(3)).fuse() => {},
+                }
+            }
+        });
+        self.context_exports.insert(id, (stop, task));
+        cx.notify();
     }
 
     pub(crate) fn open_active_thread_as_markdown(
@@ -5121,7 +5231,7 @@ impl Panel for AgentPanel {
     }
 
     fn icon(&self, _window: &Window, cx: &App) -> Option<IconName> {
-        (self.enabled(cx) && AgentSettings::get_global(cx).button).then_some(IconName::ZedAssistant)
+        (self.enabled(cx) && AgentSettings::get_global(cx).button).then_some(if crate::external_agents_only(cx) { IconName::Reader } else { IconName::ZedAssistant })
     }
 
     fn icon_tooltip(&self, _window: &Window, _cx: &App) -> Option<&'static str> {
@@ -5921,7 +6031,7 @@ impl AgentPanel {
             Rc::new(move |window, cx| {
                 Some(ContextMenu::build(window, cx, |menu, _window, cx| {
                     menu.context(focus_handle.clone())
-                        .item(
+                        .when(!crate::external_agents_only(cx), |menu| menu.item(
                             ContextMenuEntry::new("Zed Agent")
                                 .when(
                                     !showing_terminal && is_agent_selected(Agent::NativeAgent),
@@ -5951,7 +6061,7 @@ impl AgentPanel {
                                         }
                                     }
                                 }),
-                        )
+                        ))
                         .when(supports_terminal, |menu| {
                             menu.item(
                                 ContextMenuEntry::new("Terminal")
@@ -6338,7 +6448,7 @@ impl AgentPanel {
         _window: &mut Window,
         cx: &mut Context<Self>,
     ) -> Option<impl IntoElement> {
-        if !self.should_render_new_user_onboarding(cx) {
+        if crate::external_agents_only(cx) || !self.should_render_new_user_onboarding(cx) {
             return None;
         }
 
@@ -6657,6 +6767,49 @@ impl Render for AgentPanel {
                 }
             }))
             .child(self.render_toolbar(window, cx))
+            .child(h_flex().px_3().py_2().gap_2().flex_wrap().border_b_1().border_color(cx.theme().colors().border_variant)
+                .child(Button::new("context-history", "Context history").on_click(cx.listener(|panel, _, window, cx| {
+                    if let Some(workspace) = panel.workspace.upgrade() {
+                        workspace.update(cx, |workspace, cx| crate::context_history::open(workspace, window, cx));
+                    }
+                })))
+                    .child(Button::new("explain-export", "Export Markdown").disabled(self.active_agent_thread(cx).is_none()).on_click(cx.listener(|panel, _, window, cx| panel.open_active_thread_as_markdown(&OpenActiveThreadAsMarkdown, window, cx))))
+                    .child(Button::new("explain-save-context", if self.active_thread_id(cx).is_some_and(|id| self.context_exports.contains_key(&id)) { "Stop context updates" } else { "Save context folder" })
+                        .disabled(self.active_agent_thread(cx).is_none())
+                        .tooltip(Tooltip::text("Save this conversation as Markdown and keep it updated while Hulder is open. Contains source and conversation text."))
+                        .on_click(cx.listener(|panel, _, _, cx| panel.toggle_context_export(cx))))
+                )
+            .when(self.active_thread_id(cx).is_some_and(|id| self.explanation_threads.contains(&id)), |view| view.child(
+                h_flex().w_full().px_3().py_2().gap_2().flex_wrap().border_b_1().border_color(cx.theme().colors().border_variant)
+                    .child(Label::new("Code explanation").color(Color::Muted))
+                    .child(Button::new("explain-more", "Explain more")
+                        .disabled(self.active_agent_thread(cx).is_none_or(|thread| !thread.read(cx).is_idle_for_retention()))
+                        .on_click(cx.listener(|panel, _, _, cx| {
+                            if let Some(thread) = panel.active_agent_thread(cx) {
+                                let submission = thread.update(cx, |thread, cx| thread.send(vec![acp_v2::ContentBlock::Text(acp_v2::TextContent::new(crate::explain_code::EXPAND))], cx));
+                                cx.spawn(async move |_, _| submission.await.map(|_| ())).detach_and_log_err(cx);
+                            }
+                        })))
+                    .child(Button::new("explain-account", "Connect account")
+                        .disabled(self.active_conversation_view().is_none_or(|view| !view.read(cx).has_auth_methods()))
+                        .on_click(cx.listener(|panel, _, window, cx| {
+                            if let Some(view) = panel.active_conversation_view() {
+                                view.update(cx, |view, cx| view.reauthenticate(window, cx));
+                            }
+                        })))
+                    .child(Button::new("explain-install", "Install agents").on_click(|_, window, cx| window.dispatch_action(Box::new(zed_actions::AcpRegistry), cx)))
+                    .child(Button::new("explain-feedback", "Connect Feedback Graph")
+                        .tooltip(Tooltip::text("Add the local Feedback Graph MCP endpoint. Start Feedback Graph first, then create a new agent conversation."))
+                        .on_click(cx.listener(|panel, _, _, cx| {
+                            settings::update_settings_file(panel.fs.clone(), cx, |settings, _| {
+                                settings.project.context_servers.entry("feedback-graph".into()).or_insert_with(|| settings::ContextServerSettingsContent::Http {
+                                    enabled: true, url: "http://127.0.0.1:8787/mcp".into(), headers: HashMap::default(), timeout: Some(60), oauth: None,
+                                });
+                            });
+                            Self::show_deferred_toast(&panel.workspace, "Feedback Graph configuration requested. Start a new conversation to use its tools. Existing settings are preserved.", cx);
+                        })))
+                    .child(Button::new("explain-settings", "Agent settings").on_click(|_, window, cx| window.dispatch_action(Box::new(OpenSettings), cx)))
+            ))
             .children(self.render_new_user_onboarding(window, cx))
             .map(|parent| match self.visible_surface() {
                 VisibleSurface::Uninitialized if !self.has_open_project(cx) => {
@@ -14766,5 +14919,21 @@ mod tests {
                 "selected_agent should be restored to the original after an agent override"
             );
         });
+    }
+}
+
+#[cfg(test)]
+mod explanation_persistence_tests {
+    use super::*;
+    #[test]
+    fn restores_explanation_ids_and_accepts_old_panel_state() {
+        let old = serde_json::json!({"selected_agent": null});
+        let mut panel: SerializedAgentPanel = serde_json::from_value(old).expect("old state");
+        assert!(panel.explanation_threads.is_empty());
+        let id = ThreadId::new();
+        panel.explanation_threads.insert(id);
+        let saved = serde_json::to_string(&panel).expect("serialize");
+        let restored: SerializedAgentPanel = serde_json::from_str(&saved).expect("restore");
+        assert!(restored.explanation_threads.contains(&id));
     }
 }

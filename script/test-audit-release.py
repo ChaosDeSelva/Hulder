@@ -23,6 +23,18 @@ class ReleaseAuditTests(unittest.TestCase):
         self.assertEqual({package['id'] for package in audit.dependency_closure(metadata, 'zed')},
                          {'zed', 'runtime', 'build'})
 
+    def test_release_graph_excludes_inactive_workspace_features(self):
+        metadata = {'packages': [
+            {'name': 'runtime', 'version': '1.0.0'},
+            {'name': 'inactive', 'version': '2.0.0'},
+        ]}
+        self.assertEqual(audit.release_packages(metadata, 'runtime v1.0.0\n'),
+                         [metadata['packages'][0]])
+        with self.assertRaises(ValueError):
+            audit.release_packages(metadata, 'unknown v1.0.0\n')
+        with self.assertRaises(ValueError):
+            audit.release_packages(metadata, '')
+
     def test_a_reclassified_notice_becomes_a_blocker(self):
         advisory = {'id': 'RUSTSEC-2024-0370',
                     'affected': [{'database_specific': {'informational': 'unmaintained'}}]}

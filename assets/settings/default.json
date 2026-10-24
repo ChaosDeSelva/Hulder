@@ -128,7 +128,7 @@
     // Whether to limit the width of the rendered markdown content. When
     // enabled, content is constrained to `max_width` and centered
     // horizontally within the preview pane.
-    "limit_content_width": true,
+    "limit_content_width": false,
     // The maximum width, in pixels, of the rendered markdown content when
     // limit_content_width is enabled.
     "max_width": 800,
@@ -1195,7 +1195,7 @@
     // Whether to limit the content width in the agent panel. When enabled,
     // content will be constrained to `max_content_width` and centered when
     // the panel is wider, for optimal readability.
-    "limit_content_width": true,
+    "limit_content_width": false,
     // Maximum content width in pixels when limit_content_width is enabled.
     // Content will be centered within the panel.
     "max_content_width": 850,
@@ -1718,7 +1718,7 @@
   // Whether to disable all AI features in Zed.
   //
   // Default: false
-  "disable_ai": true,
+  "disable_ai": false,
   // Check Hulder releases on GitHub after launch and daily while running.
   // Downloads require confirmation; installation remains manual.
   "auto_update": true,

@@ -26556,7 +26556,7 @@ SOFTWARE.
 
 * [tokio-stream 0.1.17]( https://github.com/tokio-rs/tokio )
 * [tokio-util 0.7.18]( https://github.com/tokio-rs/tokio )
-* [tokio 1.52.1]( https://github.com/tokio-rs/tokio )
+* [tokio 1.53.3]( https://github.com/tokio-rs/tokio )
 
 MIT License
 

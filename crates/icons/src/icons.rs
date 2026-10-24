@@ -239,6 +239,7 @@ pub enum IconName {
     Send,
     Server,
     Settings,
+    Wrench,
     Share,
     Shift,
     SignalHigh,

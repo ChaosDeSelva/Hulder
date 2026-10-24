@@ -291,6 +291,10 @@ pub fn deploy_context_menu(
                         quick_launch: false,
                     }),
                 )
+                .when(!disable_ai, |this| {
+                    this.action("Explain with Claude", Box::new(zed_actions::agent::ExplainCodeWithClaude))
+                        .action("Explain with Codex", Box::new(zed_actions::agent::ExplainCodeWithCodex))
+                })
                 .when(!disable_ai && has_selections, |this| {
                     this.action("Add to Agent Thread", Box::new(AddSelectionToThread))
                 })

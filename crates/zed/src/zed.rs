@@ -613,6 +613,8 @@ pub fn initialize_workspace(app_state: Arc<AppState>, cx: &mut App) {
             status_bar.add_left_item(git_blame_status, window, cx);
             status_bar.add_left_item(merge_conflict_indicator, window, cx);
             status_bar.add_left_item(activity_indicator, window, cx);
+            let agent_activity = cx.new(|_| kit::activity::ActivityButton::new(workspace));
+            status_bar.add_right_item(agent_activity, window, cx);
             status_bar.add_right_item(active_buffer_encoding, window, cx);
             status_bar.add_right_item(active_buffer_language, window, cx);
             status_bar.add_right_item(active_toolchain_language, window, cx);
@@ -750,6 +752,10 @@ fn show_software_emulation_warning_if_needed(
 
 fn initialize_panels(window: &mut Window, cx: &mut Context<Workspace>) -> Task<anyhow::Result<()>> {
     cx.spawn_in(window, async move |workspace_handle, cx| {
+        if cx.update(|_, cx| agent_ui::external_agents_only(cx))? {
+            let panel = agent_ui::AgentPanel::load(workspace_handle.clone(), cx.clone()).await?;
+            workspace_handle.update_in(cx, |workspace, window, cx| workspace.add_panel(panel, window, cx))?;
+        }
         let project_panel = ProjectPanel::load(workspace_handle.clone(), cx.clone());
         let outline_panel = OutlinePanel::load(workspace_handle.clone(), cx.clone());
         let terminal_panel = TerminalPanel::load(workspace_handle.clone(), cx.clone());

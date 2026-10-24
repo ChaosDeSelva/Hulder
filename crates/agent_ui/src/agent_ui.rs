@@ -1,3 +1,4 @@
+mod context_history;
 mod agent_configuration;
 pub mod agent_connection_store;
 mod agent_diff;
@@ -14,6 +15,7 @@ mod diagnostics;
 pub mod draft_prompt_store;
 mod entry_view_state;
 mod external_source_prompt;
+mod explain_code;
 mod favorite_models;
 mod inline_assistant;
 mod inline_prompt_editor;
@@ -670,6 +672,45 @@ pub(crate) fn humanize_token_count(count: u64) -> String {
         }
         10_000_000.. => format!("{}M", (count + 500_000) / 1_000_000),
     }
+}
+
+struct ExternalAgentsOnly;
+impl gpui::Global for ExternalAgentsOnly {}
+
+pub fn external_agents_only(cx: &App) -> bool {
+    cx.try_global::<ExternalAgentsOnly>().is_some()
+}
+
+/// Initializes local external agent conversations without hosted model providers or migrations.
+pub fn init_external(fs: Arc<dyn Fs>, language_registry: Arc<LanguageRegistry>, cx: &mut App) {
+    cx.set_global(ExternalAgentsOnly);
+    agent::ThreadStore::init_global(cx);
+    prompt_store::init(cx);
+    agent_panel::init(cx);
+    context_server_configuration::init(language_registry, fs, cx);
+    thread_metadata_store::init(cx);
+    terminal_thread_metadata_store::init(cx);
+    cx.observe_new(|workspace: &mut Workspace, _, _| {
+        workspace.register_action(AgentPanel::toggle_focus);
+        workspace.register_action(AgentPanel::toggle);
+        workspace.register_action(AgentPanel::focus);
+        workspace.register_action(|workspace: &mut Workspace, _: &crate::context_history::OpenContextHistory, window, cx| {
+            crate::context_history::open(workspace, window, cx);
+        });
+        workspace.register_action(|workspace: &mut Workspace, _: &zed_actions::AcpRegistry, window, cx| {
+            let page = AgentRegistryPage::new(workspace, window, cx);
+            workspace.add_item_to_active_pane(Box::new(page), None, true, window, cx);
+        });
+    }).detach();
+    command_palette_hooks::CommandPaletteFilter::update_global(cx, |filter, _| {
+        filter.show_action_types(&[
+            std::any::TypeId::of::<crate::context_history::OpenContextHistory>(),
+            std::any::TypeId::of::<zed_actions::assistant::ToggleFocus>(),
+            std::any::TypeId::of::<zed_actions::assistant::FocusAgent>(),
+            std::any::TypeId::of::<zed_actions::agent::ExplainCodeWithClaude>(),
+            std::any::TypeId::of::<zed_actions::agent::ExplainCodeWithCodex>(),
+        ]);
+    });
 }
 
 /// Initializes the `agent` crate.

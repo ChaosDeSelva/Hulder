@@ -33,6 +33,21 @@ def dependency_closure(metadata, package_name):
                 pending.append(dependency['pkg'])
     return [package for package in metadata['packages'] if package['id'] in visited]
 
+def release_packages(metadata, tree):
+    # Workspace metadata unifies optional features enabled by other binaries.
+    # Cargo tree selects the actual editor normal/build graph for this target.
+    selected = set()
+    for line in tree.splitlines():
+        fields = line.split()
+        if len(fields) < 2 or not fields[1].startswith('v'):
+            raise ValueError('Unexpected Cargo tree package record')
+        selected.add((fields[0], fields[1][1:]))
+    known = {(package['name'], package['version']) for package in metadata['packages']}
+    if not selected or selected - known:
+        raise ValueError('Release graph contains unknown packages')
+    return [package for package in metadata['packages']
+            if (package['name'], package['version']) in selected]
+
 def api(path, payload=None):
     data = None if payload is None else json.dumps(payload).encode()
     request = urllib.request.Request('https://api.osv.dev/v1/' + path, data=data,
@@ -59,7 +74,12 @@ def main():
             'cargo', 'metadata', '--locked', '--format-version', '1',
             '--filter-platform', 'aarch64-apple-darwin', '--features', 'util/debug-embed',
         ], cwd=root))
-    packages = dependency_closure(metadata, 'zed')
+    tree = subprocess.check_output([
+        'cargo', 'tree', '--locked', '-p', 'zed', '--target', 'aarch64-apple-darwin',
+        '--features', 'util/debug-embed', '--edges', 'normal,build',
+        '--prefix', 'none', '--format', '{p}',
+    ], cwd=root, text=True)
+    packages = release_packages(metadata, tree)
     registry = [package for package in packages if (package.get('source') or '').startswith('registry+')]
     findings = []
     details = {}

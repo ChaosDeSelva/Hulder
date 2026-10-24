@@ -1,6 +1,10 @@
 //! The Kit: a tabbed strip at the bottom of the Grove listing what an agent
 //! will use in this project (skills, agents, MCP servers and rule files).
 
+pub mod activity;
+mod activity_data;
+mod activity_history;
+pub mod hooks;
 pub mod scan;
 
 use anyhow::Context as _;
@@ -74,10 +78,17 @@ pub enum KitTab {
     Agents,
     Mcp,
     Rules,
+    Hooks,
 }
 
 impl KitTab {
-    pub const ALL: [KitTab; 4] = [KitTab::Skills, KitTab::Agents, KitTab::Mcp, KitTab::Rules];
+    pub const ALL: [KitTab; 5] = [
+        KitTab::Skills,
+        KitTab::Agents,
+        KitTab::Mcp,
+        KitTab::Rules,
+        KitTab::Hooks,
+    ];
 
     pub fn label(self) -> &'static str {
         match self {
@@ -85,6 +96,7 @@ impl KitTab {
             KitTab::Agents => "Agents",
             KitTab::Mcp => "MCP",
             KitTab::Rules => "Rules",
+            KitTab::Hooks => "Hooks",
         }
     }
 }
@@ -310,6 +322,9 @@ impl Kit {
 
     pub fn set_tab(&mut self, tab: KitTab, cx: &mut Context<Self>) {
         self.tab = tab;
+        if tab == KitTab::Hooks {
+            self.schedule_refresh(cx);
+        }
         cx.notify();
     }
 
@@ -407,11 +422,45 @@ impl Kit {
                         cached_user_config,
                     )
                     .await;
-                    let scan = scan::scan(
+                    let mut scan = scan::scan(
                         &paths,
                         &|path| texts.get(path).cloned(),
                         user_config.text.as_deref(),
                     );
+                    for path in hooks::configuration_paths() {
+                        let path_text = path.to_string_lossy().into_owned();
+                        match fs.metadata(&path).await {
+                            Ok(None) => continue,
+                            Ok(Some(_)) => {}
+                            Err(_) => {
+                                scan.hook_errors
+                                    .push((path_text, "Cannot inspect configuration".into()));
+                                continue;
+                            }
+                        }
+                        let agent = if path.file_name().is_some_and(|name| name == "settings.json")
+                        {
+                            "Claude"
+                        } else {
+                            "Codex"
+                        };
+                        match read_capped_nofollow(
+                            fs.as_ref(),
+                            &executor,
+                            &path,
+                            MAX_USER_CONFIG_BYTES,
+                        )
+                        .await
+                        {
+                            Ok(text) => match hooks::parse(&text, &path_text, agent) {
+                                Ok(hooks) => scan.hooks.extend(hooks),
+                                Err(error) => scan.hook_errors.push((path_text, error)),
+                            },
+                            Err(_) => scan
+                                .hook_errors
+                                .push((path_text, "Cannot read configuration safely".into())),
+                        }
+                    }
                     let running = Self::running_commands(live_process_names(), &scan.mcp);
                     ScanOutcome {
                         scan,
@@ -598,6 +647,7 @@ impl Kit {
             KitTab::Agents => self.results.scan.agents.len() + self.live_agents(cx).len(),
             KitTab::Mcp => self.results.scan.mcp.len(),
             KitTab::Rules => self.results.scan.rules.found.len(),
+            KitTab::Hooks => self.results.scan.hooks.len(),
         };
         h_flex()
             .w_full()
@@ -606,6 +656,7 @@ impl Kit {
             .gap_0p5()
             .border_b_1()
             .border_color(cx.theme().colors().border_variant)
+            .flex_wrap()
             .children(KitTab::ALL.into_iter().enumerate().map(|(index, tab)| {
                 let count = counts(tab);
                 let label = if count > 0 {
@@ -831,6 +882,26 @@ impl Kit {
         v_flex().child(list).child(buttons).into_any_element()
     }
 
+    fn render_hooks(&self, cx: &Context<Self>) -> AnyElement {
+        v_flex().gap_1()
+            .child(Self::empty("Configured hooks. Trust and execution are controlled by the agent. Select a hook to inspect or edit its source."))
+            .children(self.results.scan.hooks.iter().enumerate().map(|(index, hook)| {
+                let path = hook.path.clone();
+                let scope = if Path::new(&path).is_absolute() { "User" } else { "Project" };
+                Self::row(("kit-hook", index), Icon::new(IconName::Settings).size(IconSize::Small).color(Color::Muted),
+                    format!("{} · {} · {}", hook.agent, hook.event, if hook.disabled { "Disabled" } else { "Configured" }),
+                    Some(format!("{scope} · {} · {} · {} · {}", hook.kind, hook.matcher, hook.description, path)))
+                    .on_click(cx.listener(move |this, _: &ClickEvent, window, cx| this.open_relative_path(&path, window, cx)))
+            }))
+            .children(self.results.scan.hook_errors.iter().enumerate().map(|(index, (path, error))| {
+                let path = path.clone();
+                Self::row(("kit-hook-error", index), Icon::new(IconName::CircleHelp).color(Color::Warning), error.clone(), Some(path.clone()))
+                    .on_click(cx.listener(move |this, _: &ClickEvent, window, cx| this.open_relative_path(&path, window, cx)))
+            }))
+            .when(self.results.scan.hooks.is_empty(), |view| view.child(Self::empty("No hooks found in project or user configuration.")))
+            .into_any_element()
+    }
+
     fn render_rules(&self, cx: &Context<Self>) -> AnyElement {
         let rules = &self.results.scan.rules;
         v_flex()
@@ -892,6 +963,7 @@ impl Render for Kit {
             KitTab::Agents => self.render_agents(cx),
             KitTab::Mcp => self.render_mcp(cx),
             KitTab::Rules => self.render_rules(cx),
+            KitTab::Hooks => self.render_hooks(cx),
         };
         v_flex()
             .id("kit")
