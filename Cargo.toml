@@ -841,7 +841,7 @@ prost-build = { version = "0.14", default-features = false }
 prost-types = "0.14"
 protox = "0.9"
 proxyvars = "0.2"
-pulldown-cmark = { version = "0.13.0", default-features = false }
+pulldown-cmark = { version = "0.13.6", default-features = false }
 quick-xml = "0.41"
 quote = "1.0.9"
 rand = { version = "0.9", default-features = false, features = ["std", "std_rng", "os_rng"] }
@@ -968,7 +968,7 @@ wasm-encoder = "0.254"
 # the wasm-bindgen init function with the positional arguments deprecated in 0.2.93.
 wasm_thread = { git = "https://github.com/zed-industries/wasm_thread", rev = "0cf96c7708dfb97ccf3da50347e25edcf75d6937", version = "0.3", features = ["es_modules"] }
 wasmparser = "0.254"
-wasmtime = { version = "48.0.7", default-features = false, features = [
+wasmtime = { version = "48.0.8", default-features = false, features = [
     "anyhow",
     "async",
     "demangle",
@@ -980,7 +980,7 @@ wasmtime = { version = "48.0.7", default-features = false, features = [
 ] }
 wasm-bindgen = "0.2.120"
 wasm-bindgen-futures = "0.4"
-wasmtime-wasi = { version = "48.0.7", default-features = false, features = ["p2"] }
+wasmtime-wasi = { version = "48.0.8", default-features = false, features = ["p2"] }
 wax = { version = "0.7", default-features = false }
 web-sys = "0.3"
 web-time = "1.1.0"
@@ -994,7 +994,7 @@ xkbcommon = { version = "0.8", default-features = false }
 yaml-rust2 = { version = "0.8", default-features = false }
 yawc = { version = "0.4", default-features = false }
 zeroize = "1.8"
-zstd = { version = "0.13", default-features = false, features = ["legacy", "arrays"] }
+zstd = { version = "0.13.4", default-features = false, features = ["legacy", "arrays"] }
 
 [workspace.dependencies.windows]
 version = "0.62"

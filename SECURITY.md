@@ -22,7 +22,7 @@ The audit follows normal and build dependencies from the editor root for Apple s
 
 Eight currently reachable maintenance notices concern async-std, bincode, core2, paste, rustls-pemfile, rustybuzz, ttf-parser and unsafe-libyaml. These describe discontinued maintenance rather than a reported vulnerability in the checked versions. Their replacement is tracked maintenance work. The audit permits only the specific reviewed notice identifiers and only while they remain classified as unmaintained. It will block a reclassification to a security or unsoundness advisory. Reassess these dependencies before every release.
 
-The fixes in this candidate include Wasmtime and WASI 48.0.6, rustls 0.23.46, cxx 1.0.195, patched memory and cache dependencies, and replacement of the inherited RSA implementation with AWS LC, which uses isolated native symbols. Authentication accepts OAEP with SHA256 and refuses legacy padding. The new cache dependency minimum is 0.18.2. Always build with the committed lockfile.
+The fixes in this candidate include Wasmtime and WASI 48.0.8, rustls 0.23.46, cxx 1.0.195, patched memory and cache dependencies, and replacement of the inherited RSA implementation with AWS LC, which uses isolated native symbols. Authentication accepts OAEP with SHA256 and refuses legacy padding. The new cache dependency minimum is 0.18.2. Always build with the committed lockfile.
 
 ## Trust boundaries
 

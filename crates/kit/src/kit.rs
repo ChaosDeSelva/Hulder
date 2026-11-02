@@ -2,6 +2,8 @@
 //! will use in this project (skills, agents, MCP servers and rule files).
 
 pub mod activity;
+pub mod tab_groups;
+mod tab_groups_data;
 mod activity_data;
 mod activity_history;
 pub mod hooks;
@@ -70,6 +72,7 @@ impl Global for KitHerd {}
 /// `try_global` and shows no live agents when it is absent.
 pub fn init(cx: &mut App) {
     cx.set_global(KitHerd(HerdState::global(cx)));
+    tab_groups::init(cx);
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

@@ -300,10 +300,10 @@ THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH RE
 
 ## Overview of licenses:
 
-* Apache License 2.0 (988)
-* MIT License (368)
+* Apache License 2.0 (987)
+* MIT License (367)
 * Unicode License v3 (23)
-* BSD 3-Clause "New" or "Revised" License (20)
+* BSD 3-Clause "New" or "Revised" License (22)
 * Mozilla Public License 2.0 (16)
 * ISC License (11)
 * zlib License (7)
@@ -1828,24 +1828,24 @@ THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH RE
 
 ##### Used by:
 
-* [cranelift-bforest 0.135.7]( https://github.com/bytecodealliance/wasmtime )
-* [cranelift-codegen-meta 0.135.7]( https://github.com/bytecodealliance/wasmtime )
-* [cranelift-codegen-shared 0.135.7]( https://github.com/bytecodealliance/wasmtime )
-* [cranelift-codegen 0.135.7]( https://github.com/bytecodealliance/wasmtime )
-* [cranelift-control 0.135.7]( https://github.com/bytecodealliance/wasmtime )
-* [cranelift-entity 0.135.7]( https://github.com/bytecodealliance/wasmtime )
-* [cranelift-frontend 0.135.7]( https://github.com/bytecodealliance/wasmtime )
-* [cranelift-native 0.135.7]( https://github.com/bytecodealliance/wasmtime )
+* [cranelift-bforest 0.135.8]( https://github.com/bytecodealliance/wasmtime )
+* [cranelift-codegen-meta 0.135.8]( https://github.com/bytecodealliance/wasmtime )
+* [cranelift-codegen-shared 0.135.8]( https://github.com/bytecodealliance/wasmtime )
+* [cranelift-codegen 0.135.8]( https://github.com/bytecodealliance/wasmtime )
+* [cranelift-control 0.135.8]( https://github.com/bytecodealliance/wasmtime )
+* [cranelift-entity 0.135.8]( https://github.com/bytecodealliance/wasmtime )
+* [cranelift-frontend 0.135.8]( https://github.com/bytecodealliance/wasmtime )
+* [cranelift-native 0.135.8]( https://github.com/bytecodealliance/wasmtime )
 * [regalloc2 0.15.2]( https://github.com/bytecodealliance/regalloc2 )
 * [target-lexicon 0.13.5]( https://github.com/bytecodealliance/target-lexicon )
 * [wasm-encoder 0.201.0]( https://github.com/bytecodealliance/wasm-tools/tree/main/crates/wasm-encoder )
 * [wasmparser 0.201.0]( https://github.com/bytecodealliance/wasm-tools/tree/main/crates/wasmparser )
-* [wasmtime-environ 48.0.7]( https://github.com/bytecodealliance/wasmtime )
-* [wasmtime-internal-cranelift 48.0.7]( https://github.com/bytecodealliance/wasmtime )
-* [wasmtime-internal-fiber 48.0.7]( https://github.com/bytecodealliance/wasmtime )
-* [wasmtime-internal-unwinder 48.0.7]( https://github.com/bytecodealliance/wasmtime )
-* [wasmtime-wasi 48.0.7]( https://github.com/bytecodealliance/wasmtime )
-* [wasmtime 48.0.7]( https://github.com/bytecodealliance/wasmtime )
+* [wasmtime-environ 48.0.8]( https://github.com/bytecodealliance/wasmtime )
+* [wasmtime-internal-cranelift 48.0.8]( https://github.com/bytecodealliance/wasmtime )
+* [wasmtime-internal-fiber 48.0.8]( https://github.com/bytecodealliance/wasmtime )
+* [wasmtime-internal-unwinder 48.0.8]( https://github.com/bytecodealliance/wasmtime )
+* [wasmtime-wasi 48.0.8]( https://github.com/bytecodealliance/wasmtime )
+* [wasmtime 48.0.8]( https://github.com/bytecodealliance/wasmtime )
 * [winx 0.36.4]( https://github.com/sunfishcode/winx )
 
 
@@ -20541,11 +20541,11 @@ limitations under the License.
 * [cesu8 1.1.0]( https://github.com/emk/cesu8-rs )
 * [compression-codecs 0.4.31]( https://github.com/Nullus157/async-compression )
 * [compression-core 0.4.29]( https://github.com/Nullus157/async-compression )
-* [cranelift-assembler-x64-meta 0.135.7]( https://crates.io/crates/cranelift-assembler-x64-meta )
-* [cranelift-assembler-x64 0.135.7]( https://crates.io/crates/cranelift-assembler-x64 )
-* [cranelift-bitset 0.135.7]( https://github.com/bytecodealliance/wasmtime )
-* [cranelift-isle 0.135.7]( https://github.com/bytecodealliance/wasmtime/tree/main/cranelift/isle )
-* [cranelift-srcgen 0.135.7]( https://github.com/bytecodealliance/wasmtime )
+* [cranelift-assembler-x64-meta 0.135.8]( https://crates.io/crates/cranelift-assembler-x64-meta )
+* [cranelift-assembler-x64 0.135.8]( https://crates.io/crates/cranelift-assembler-x64 )
+* [cranelift-bitset 0.135.8]( https://github.com/bytecodealliance/wasmtime )
+* [cranelift-isle 0.135.8]( https://github.com/bytecodealliance/wasmtime/tree/main/cranelift/isle )
+* [cranelift-srcgen 0.135.8]( https://github.com/bytecodealliance/wasmtime )
 * [cxx-build 1.0.195]( https://github.com/dtolnay/cxx )
 * [cxx 1.0.195]( https://github.com/dtolnay/cxx )
 * [cxxbridge-flags 1.0.195]( https://github.com/dtolnay/cxx )
@@ -20648,8 +20648,8 @@ limitations under the License.
 * [proc-macro2 1.0.107]( https://github.com/dtolnay/proc-macro2 )
 * [profiling-procmacros 1.0.17]( https://github.com/aclysma/profiling )
 * [profiling 1.0.17]( https://github.com/aclysma/profiling )
-* [pulley-interpreter 48.0.7]( https://github.com/bytecodealliance/wasmtime/tree/main/pulley )
-* [pulley-macros 48.0.7]( https://github.com/bytecodealliance/wasmtime/tree/main/pulley/macros )
+* [pulley-interpreter 48.0.8]( https://github.com/bytecodealliance/wasmtime/tree/main/pulley )
+* [pulley-macros 48.0.8]( https://github.com/bytecodealliance/wasmtime/tree/main/pulley/macros )
 * [quote 1.0.47]( https://github.com/dtolnay/quote )
 * [r-efi 5.3.0]( https://github.com/r-efi/r-efi )
 * [rand 0.10.2]( https://github.com/rust-random/rand )
@@ -20731,13 +20731,13 @@ limitations under the License.
 * [wasmparser 0.227.1]( https://github.com/bytecodealliance/wasm-tools/tree/main/crates/wasmparser )
 * [wasmtime-c-api-impl 48.0.1]( https://github.com/bytecodealliance/wasmtime )
 * [wasmtime-internal-c-api-macros 48.0.1]( https://github.com/bytecodealliance/wasmtime )
-* [wasmtime-internal-component-macro 48.0.7]( https://github.com/bytecodealliance/wasmtime )
-* [wasmtime-internal-component-util 48.0.7]( https://github.com/bytecodealliance/wasmtime )
-* [wasmtime-internal-core 48.0.7]( https://crates.io/crates/wasmtime-internal-core )
-* [wasmtime-internal-jit-icache-coherence 48.0.7]( https://github.com/bytecodealliance/wasmtime )
-* [wasmtime-internal-versioned-export-macros 48.0.7]( https://github.com/bytecodealliance/wasmtime )
-* [wasmtime-internal-wit-bindgen 48.0.7]( https://github.com/bytecodealliance/wasmtime )
-* [wasmtime-wasi-io 48.0.7]( https://github.com/bytecodealliance/wasmtime )
+* [wasmtime-internal-component-macro 48.0.8]( https://github.com/bytecodealliance/wasmtime )
+* [wasmtime-internal-component-util 48.0.8]( https://github.com/bytecodealliance/wasmtime )
+* [wasmtime-internal-core 48.0.8]( https://crates.io/crates/wasmtime-internal-core )
+* [wasmtime-internal-jit-icache-coherence 48.0.8]( https://github.com/bytecodealliance/wasmtime )
+* [wasmtime-internal-versioned-export-macros 48.0.8]( https://github.com/bytecodealliance/wasmtime )
+* [wasmtime-internal-wit-bindgen 48.0.8]( https://github.com/bytecodealliance/wasmtime )
+* [wasmtime-wasi-io 48.0.8]( https://github.com/bytecodealliance/wasmtime )
 * [wgpu-core-deps-apple 29.0.4]( https://github.com/gfx-rs/wgpu )
 * [wgpu-core-deps-emscripten 29.0.4]( https://github.com/gfx-rs/wgpu )
 * [wgpu-core-deps-wasm 29.0.4]( https://github.com/gfx-rs/wgpu )
@@ -20765,7 +20765,6 @@ limitations under the License.
 * [wit-parser 0.201.0]( https://github.com/bytecodealliance/wasm-tools/tree/main/crates/wit-parser )
 * [wit-parser 0.227.1]( https://github.com/bytecodealliance/wasm-tools/tree/main/crates/wit-parser )
 * [yaml-rust2 0.8.1]( https://github.com/Ethiraric/yaml-rust2 )
-* [zstd-sys 2.0.16+zstd.1.5.7]( https://github.com/gyscos/zstd-rs )
 * [zune-inflate 0.2.54]( https://crates.io/crates/zune-inflate )
 
 Apache License
@@ -22022,7 +22021,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 ##### Used by:
 
-* [zstd-safe 7.3.0]( https://github.com/gyscos/zstd-rs )
+* [zstd-safe 7.4.0]( https://github.com/gyscos/zstd-rs )
+* [zstd-sys 2.1.2+zstd.1.5.7]( https://github.com/gyscos/zstd-rs )
+* [zstd 0.13.4]( https://github.com/gyscos/zstd-rs )
 
 BSD 3-Clause License
 
@@ -26863,7 +26864,7 @@ THE SOFTWARE.
 
 * [pulldown-cmark-escape 0.10.1]( https://github.com/raphlinus/pulldown-cmark )
 * [pulldown-cmark 0.10.3]( https://github.com/raphlinus/pulldown-cmark )
-* [pulldown-cmark 0.13.4]( https://github.com/raphlinus/pulldown-cmark )
+* [pulldown-cmark 0.13.6]( https://github.com/raphlinus/pulldown-cmark )
 
 The MIT License
 
@@ -28339,24 +28340,6 @@ HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
 WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 OTHER DEALINGS IN THE SOFTWARE.
-
-
---------------------------------------------------------------------------------
-
-#### MIT License
-
-##### Used by:
-
-* [zstd 0.13.3]( https://github.com/gyscos/zstd-rs )
-
-The MIT License (MIT)
-Copyright (c) 2016 Alexandre Bury
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
 --------------------------------------------------------------------------------

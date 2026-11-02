@@ -104,6 +104,30 @@ The [Hooks and agent activity inspector](docs/agent_activity.md) shows project a
 
 Use the task picker to open Heimdall, check the local services, or start the factory. Inspect plans, agents, blockers and verification in Heimdall; edit the task worktrees in Hulder. The existing Herd panel attaches to Herdr-backed agents. See [factory integration](FACTORY_INTEGRATION.md) for setup and the boundaries between the IDE, dashboard and agent runtimes.
 
+## Saved tab groups and file bookmarks
+
+Use the folder icon in the bottom left dock, or run `tab groups: toggle panel`
+from the command palette. Enter a group name and select **Save open tabs** to
+capture saved local file tabs across the window's panes in tab order.
+Untitled buffers and nonfile tabs are skipped and reported.
+
+Select a group to inspect its files, open them individually, or use **Open all**
+to add them to your current tabs. **Replace tabs** opens the saved files first,
+then asks about unsaved changes before closing other tabs. Cancelling a close
+keeps those tabs open. Groups save file references, not copies of unsaved text,
+cursor positions or split layouts.
+
+Groups can be renamed. Groups and file entries can be reordered or removed. **Add open tabs**
+extends a selected group without duplicates. **Bookmark active file** adds the
+current editor file to the separate bookmarks list. Removing a saved entry never
+deletes its file. Missing files are marked; open a relocated file and use
+**Replace path with active file** to repair its entry. **Refresh file status**
+checks availability again and retries saving any pending library changes.
+
+The shared library is stored in `tab-groups.json` inside Hulder's local data
+folder, survives restarts and is shared between windows. It is not uploaded.
+This feature supports local files; remote workspace paths are not captured.
+
 ## Keys
 
 The JetBrains keymap is the default. Vim mode is a toggle ("vim: toggle vim mode").
