@@ -117,7 +117,7 @@ Run: `cargo test -p project_panel grove::`
 
 - [x] **Step 5: Commit**
 
-`git commit -m "project_panel: Add grove filter parsing"` (with the Co-Authored-By trailer).
+`git commit -m "project_panel: Add grove filter parsing"`.
 
 ---
 

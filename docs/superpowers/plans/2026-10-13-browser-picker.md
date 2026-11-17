@@ -212,9 +212,7 @@ Expected: 2 passed.
 
 ```bash
 git add Cargo.toml crates/cdp
-git commit -m "cdp: Add crate scaffold and protocol wire types
-
-Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>"
+git commit -m "cdp: Add crate scaffold and protocol wire types"
 ```
 
 ---
@@ -544,9 +542,7 @@ Expected: all green, including the malformed-frame and out-of-order cases.
 
 ```bash
 git add crates/cdp
-git commit -m "cdp: Add loopback WebSocket client with request correlation and sessions
-
-Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>"
+git commit -m "cdp: Add loopback WebSocket client with request correlation and sessions"
 ```
 
 ---
@@ -839,9 +835,7 @@ Expected: green.
 
 ```bash
 git add Cargo.toml crates/browser crates/settings_content assets/settings/default.json
-git commit -m "browser: Add crate scaffold, settings and pure pick module
-
-Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>"
+git commit -m "browser: Add crate scaffold, settings and pure pick module"
 ```
 
 ---
@@ -940,9 +934,7 @@ Expected: green.
 
 ```bash
 git add crates/browser
-git commit -m "browser: Add ChromeRunner with DevToolsActivePort discovery and CDP pick flow
-
-Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>"
+git commit -m "browser: Add ChromeRunner with DevToolsActivePort discovery and CDP pick flow"
 ```
 
 ---
@@ -992,9 +984,7 @@ Expected: green and clean.
 
 ```bash
 git add crates/browser
-git commit -m "browser: Add Open/PickElement/OpenPickInBuffer actions and URL prompt
-
-Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>"
+git commit -m "browser: Add Open/PickElement/OpenPickInBuffer actions and URL prompt"
 ```
 
 ---
@@ -1035,7 +1025,5 @@ Launch `target/debug/Hulder`, `Go > Browser > Open URL...`, enter `example.com`,
 
 ```bash
 git add Cargo.toml crates/zed assets/keymaps/default-macos.json
-git commit -m "zed: Wire browser actions into init, the Go menu and the macOS keymap
-
-Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>"
+git commit -m "zed: Wire browser actions into init, the Go menu and the macOS keymap"
 ```
