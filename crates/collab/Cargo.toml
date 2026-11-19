@@ -53,7 +53,7 @@ reqwest = { version = "0.11", features = ["json"] }
 rpc.workspace = true
 # sea-orm and sea-orm-macros versions must match exactly.
 sea-orm = { workspace = true, features = ["sqlx-postgres", "runtime-tokio-rustls", "with-uuid", "macros", "with-json", "with-chrono", "with-time"] }
-sea-orm-macros = "=1.1.10"
+sea-orm-macros = "=2.0.4"
 semver.workspace = true
 serde.workspace = true
 serde_json.workspace = true

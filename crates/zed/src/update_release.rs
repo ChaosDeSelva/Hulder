@@ -8,7 +8,7 @@ use std::{
     time::{SystemTime, UNIX_EPOCH},
 };
 
-pub const VERSION: &str = "0.1.6";
+pub const VERSION: &str = "0.1.7";
 const PREFIX: &str = "https://github.com/ChaosDeSelva/Hulder/releases/download/";
 #[derive(Clone, Debug, Deserialize)]
 pub struct Asset {
