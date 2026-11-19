@@ -4,16 +4,71 @@ use std::{
     fs::File,
     io::{Read, Write},
     net::{SocketAddr, TcpStream},
-    path::Path,
+    num::NonZeroU16,
+    path::{Path, PathBuf},
     time::{Duration, Instant},
 };
 
 const RESPONSE_LIMIT: usize = 2 * 1024 * 1024;
 
-pub fn console_url(task_id: Option<&str>) -> String {
-    match task_id.filter(|id| !id.is_empty() && id.bytes().all(|byte| byte.is_ascii_alphanumeric() || b"_-".contains(&byte))) {
-        Some(id) => format!("http://127.0.0.1:4320/?task={id}"),
-        None => "http://127.0.0.1:4320/".to_owned(),
+fn factory_port(setting: &str, field: &str, fallback: u16) -> Result<u16> {
+    let override_port = std::env::var(setting).ok();
+    let root = std::env::var_os("VIKING_HOME")
+        .map(PathBuf::from)
+        .or_else(|| {
+            std::env::home_dir().map(|home| home.join("Library/Application Support/Viking Factory"))
+        });
+    let config = root
+        .filter(|_| std::env::var_os("FACTORY_LAUNCHER").is_none())
+        .map(|dir| dir.join("config.json"));
+    resolve_port(override_port.as_deref(), config.as_deref(), field, fallback)
+}
+
+fn resolve_port(
+    value: Option<&str>,
+    config: Option<&Path>,
+    field: &str,
+    fallback: u16,
+) -> Result<u16> {
+    if let Some(value) = value.filter(|s| !s.is_empty()) {
+        return Ok(value
+            .parse::<NonZeroU16>()
+            .with_context(|| format!("Invalid {field} override"))?
+            .get());
+    }
+    let Some(config) = config else {
+        return Ok(fallback);
+    };
+    let file = match File::open(config) {
+        Ok(file) => file,
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(fallback),
+        Err(error) => return Err(error).context("Cannot open the Viking Factory port settings"),
+    };
+    let settings: Value =
+        serde_json::from_reader(file).context("Cannot read the Viking Factory port settings")?;
+    Ok(
+        serde_json::from_value::<NonZeroU16>(settings[field].clone())
+            .with_context(|| format!("Invalid {field} in the Viking Factory settings"))?
+            .get(),
+    )
+}
+
+pub fn console_url(task_id: Option<&str>) -> Result<String> {
+    Ok(console_url_at(
+        factory_port("HEIMDALL_PORT", "heimdall_port", 4320)?,
+        task_id,
+    ))
+}
+
+fn console_url_at(port: u16, task_id: Option<&str>) -> String {
+    match task_id.filter(|id| {
+        !id.is_empty()
+            && id
+                .bytes()
+                .all(|byte| byte.is_ascii_alphanumeric() || b"_-".contains(&byte))
+    }) {
+        Some(id) => format!("http://127.0.0.1:{port}/?task={id}"),
+        None => format!("http://127.0.0.1:{port}/"),
     }
 }
 
@@ -33,10 +88,13 @@ pub fn read_token(path: &Path) -> Result<String> {
 }
 
 pub fn request(token_path: &Path, endpoint: &str) -> Result<Value> {
-    let port = std::env::var("HULDER_FACTORY_PORT")
-        .unwrap_or_else(|_| "7700".into())
-        .parse::<u16>()
-        .context("HULDER_FACTORY_PORT must be a local TCP port")?;
+    let port = if let Ok(port) = std::env::var("HULDER_FACTORY_PORT") {
+        port.parse::<NonZeroU16>()
+            .context("HULDER_FACTORY_PORT must be a local TCP port")?
+            .get()
+    } else {
+        factory_port("MIMIR_PORT", "mimir_port", 7700)?
+    };
     request_at(
         SocketAddr::from(([127, 0, 0, 1], port)),
         token_path,
@@ -147,9 +205,31 @@ mod tests {
     use super::*;
     #[test]
     fn console_links_keep_task_context_and_reject_query_injection() {
-        assert_eq!(console_url(Some("tsk_demo")), "http://127.0.0.1:4320/?task=tsk_demo");
-        assert_eq!(console_url(Some("tsk_bad&token=secret")), "http://127.0.0.1:4320/");
-        assert_eq!(console_url(None), "http://127.0.0.1:4320/");
+        assert_eq!(
+            console_url_at(44320, Some("tsk_demo")),
+            "http://127.0.0.1:44320/?task=tsk_demo"
+        );
+        assert_eq!(
+            console_url_at(44320, Some("tsk_bad&token=secret")),
+            "http://127.0.0.1:44320/"
+        );
+        assert_eq!(console_url_at(4320, None), "http://127.0.0.1:4320/");
+    }
+
+    #[test]
+    fn resolves_only_valid_ports_from_managed_settings_and_overrides() {
+        let config = tempfile::NamedTempFile::new().expect("temporary config");
+        std::fs::write(config.path(), r#"{"mimir_port":47700}"#).expect("write config");
+        let resolve = |port| resolve_port(port, Some(config.path()), "mimir_port", 7700);
+        assert_eq!(resolve(None).expect("managed port"), 47700);
+        assert_eq!(resolve(Some("7701")).expect("explicit port"), 7701);
+        assert!(resolve(Some("0")).is_err());
+        std::fs::write(config.path(), r#"{"mimir_port":"localhost"}"#).expect("replace config");
+        assert!(resolve(None).is_err());
+        assert_eq!(
+            resolve_port(None, None, "mimir_port", 7700).expect("source default"),
+            7700
+        );
     }
 
     #[test]

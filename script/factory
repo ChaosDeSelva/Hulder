@@ -1,15 +1,35 @@
 #!/bin/bash
 set -euo pipefail
+factory_port() {
+  local port=$1 key=$2 fallback=$3 config
+  config="${VIKING_HOME:-$HOME/Library/Application Support/Viking Factory}/config.json"
+  if [[ -z $port && -z ${FACTORY_LAUNCHER:-} && -f $config ]]; then
+    port=$(plutil -extract "$key" raw -expect integer "$config") || {
+      printf 'Cannot read %s from %s\n' "$key" "$config" >&2; return 1;
+    }
+  fi
+  port=${port:-$fallback}
+  if ! [[ $port =~ ^[0-9]{1,5}$ ]] || (( 10#$port < 1 || 10#$port > 65535 )); then
+    printf 'Invalid %s. Expected a TCP port between 1 and 65535.\n' "$key" >&2; return 1
+  fi
+  printf '%d' "$((10#$port))"
+}
 case "${1:-open}" in
-  open) exec open http://127.0.0.1:4320 ;;
-  fleet) exec open "http://127.0.0.1:4320/?view=fleet" ;;
+  open|fleet)
+    port=$(factory_port "${HEIMDALL_PORT:-}" heimdall_port 4320)
+    path=/
+    [[ ${1:-open} != fleet ]] || path='/?view=fleet'
+    exec open "http://127.0.0.1:$port$path" ;;
   status)
+    mimir=$(factory_port "${MIMIR_PORT:-}" mimir_port 7700)
+    sindri=$(factory_port "${SINDRI_PORT:-}" sindri_port 4310)
+    heimdall=$(factory_port "${HEIMDALL_PORT:-}" heimdall_port 4320)
     status=0
-    for target in 'Mimir|http://127.0.0.1:7700/v1/health' 'Sindri|http://127.0.0.1:4310/v1/health' 'Heimdall|http://127.0.0.1:4320/'; do
+    for target in "Mimir|http://127.0.0.1:$mimir/v1/health" "Sindri|http://127.0.0.1:$sindri/v1/health" "Heimdall|http://127.0.0.1:$heimdall/"; do
       name=${target%%|*}; url=${target#*|}
       if curl --noproxy '*' --connect-timeout 2 --max-time 5 --silent --fail --output /dev/null "$url"; then
         printf '%s: reachable\n' "$name"
-      else printf '%s: unavailable\n' "$name"; status=1; fi
+      else printf '%s: unavailable at %s\n' "$name" "$url"; status=1; fi
     done
     exit "$status" ;;
   start)

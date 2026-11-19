@@ -359,7 +359,15 @@ impl Render for FactoryView {
                                     .on_click(cx.listener(|view, _, _, cx| view.disconnect(cx))),
                             )
                             .child(Button::new("factory-console", "Open Heimdall").on_click(
-                                cx.listener(|view, _, _, cx| cx.open_url(&factory_client::console_url(view.selected.as_deref()))),
+                                cx.listener(|view, _, _, cx| {
+                                    match factory_client::console_url(view.selected.as_deref()) {
+                                        Ok(url) => cx.open_url(&url),
+                                        Err(error) => {
+                                            view.error = Some(error.to_string());
+                                            cx.notify();
+                                        }
+                                    }
+                                }),
                             )),
                     )
                     .child(Label::new(status).color(Color::Muted))

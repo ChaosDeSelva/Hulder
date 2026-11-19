@@ -8181,6 +8181,7 @@ dependencies = [
  "project",
  "serde_json",
  "task",
+ "tempfile",
  "terminal",
  "terminal_view",
  "ui",
