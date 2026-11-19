@@ -2,8 +2,28 @@
 import { createInterface } from "node:readline";
 import { readFileSync } from "node:fs";
 import { pathToFileURL } from "node:url";
+import { homedir } from "node:os";
+import { join } from "node:path";
+
+function controllerOrigin(env) {
+  if (env.MIMIR_URL) return env.MIMIR_URL;
+  let port = env.HULDER_FACTORY_PORT || env.MIMIR_PORT || undefined;
+  if (!port && !env.FACTORY_LAUNCHER) {
+    const root = env.VIKING_HOME || join(env.HOME || homedir(), "Library/Application Support/Viking Factory");
+    try {
+      port = JSON.parse(readFileSync(join(root, "config.json"), "utf8")).mimir_port;
+      if (!Number.isInteger(port)) throw Error("Invalid managed Mimir port");
+    } catch (error) {
+      if (error.code !== "ENOENT") throw Error("Cannot read a valid Mimir port from the managed factory settings");
+    }
+  }
+  port ??= 7700;
+  if (!/^\d{1,5}$/.test(String(port)) || Number(port) < 1 || Number(port) > 65535)
+    throw Error("Invalid local Mimir port");
+  return `http://127.0.0.1:${Number(port)}`;
+}
 export function configuration(env = process.env) {
-  const origin = new URL(env.MIMIR_URL ?? "http://127.0.0.1:7700");
+  const origin = new URL(controllerOrigin(env));
   if (
     origin.protocol !== "http:" ||
     !["localhost", "127.0.0.1", "[::1]"].includes(origin.hostname) ||

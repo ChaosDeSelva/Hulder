@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+import shutil
 import subprocess
 import tempfile
 import unittest
@@ -41,6 +42,23 @@ class FactoryTasks(unittest.TestCase):
         self.assertEqual(self.task('open', FACTORY_LAUNCHER='source/factory.mjs').returncode, 0)
         self.assertEqual(self.task('open', HEIMDALL_PORT='4321').returncode, 0)
         self.assertEqual(self.calls.read_text().splitlines(), ['http://127.0.0.1:4320/', 'http://127.0.0.1:4321/'])
+
+    def test_mcp_finds_the_matching_local_controller(self):
+        def origin(**env):
+            return subprocess.run(
+                [shutil.which('node'), '--input-type=module', '-e',
+                 'const m=await import(process.argv[1]); process.stdout.write(m.configuration().origin)',
+                 FACTORY.with_name('factory-mcp.mjs').as_uri()],
+                env={**self.env, **env}, capture_output=True, text=True)
+        self.config.write_text('{"mimir_port":47700}')
+        self.assertEqual(origin().stdout, 'http://127.0.0.1:47700')
+        self.assertEqual(origin(MIMIR_PORT='47001').stdout, 'http://127.0.0.1:47001')
+        self.assertEqual(origin(MIMIR_URL='http://localhost:47002', HULDER_FACTORY_PORT='47003').stdout,
+                         'http://localhost:47002')
+        self.assertEqual(origin(FACTORY_LAUNCHER='factory.mjs').stdout, 'http://127.0.0.1:7700')
+        self.config.write_text('{"mimir_port":"47700"}')
+        self.assertNotEqual(origin().returncode, 0)
+        self.assertNotEqual(origin(MIMIR_URL='https://example.test').returncode, 0)
 
     def test_invalid_port_never_opens_a_different_dashboard(self):
         for value in ('0', '65536', '123/foo', 'localhost'):

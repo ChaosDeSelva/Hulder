@@ -37,6 +37,7 @@ DEVELOPER_DIR="$(xcode-select -p)" cargo +1.98.1 test --locked -p herd_panel --l
 health, runtime capabilities and individual task inspection. Merge
 `factory-context-server.example.json` into your editor context-server settings,
 using an absolute script path if the editor launches outside this checkout.
+The context server follows the managed Mimir port or a source port override. Set `MIMIR_URL` to choose a specific loopback controller explicitly.
 Point `MIMIR_TOKEN_FILE` at the local controller token file; do not commit a token.
 The bridge has no mutation tools and rejects remote origins and path traversal.
 It is an additional local context server, not a change to Bifröst or Herd.
